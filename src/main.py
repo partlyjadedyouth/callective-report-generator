@@ -132,6 +132,6 @@ if __name__ == "__main__":
     Execute the main function when the script is run directly.
 
     Example usage:
-    python src/main.py --sheet_key=1ZyVnhjCnsWN8zKS1Aov4yHnR_Hjdm1DuLDCIeWqwc48 --week=0
+    python src/main.py --sheet_key=asdf --week=0
     """
     exit(main())  # Run main function and use its return code as exit code
