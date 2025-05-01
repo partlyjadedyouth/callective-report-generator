@@ -93,9 +93,9 @@ def save_to_csv(data, filename=None):
     # Generate a default filename with timestamp if none is provided
     if not filename:
         # Get current timestamp in a format suitable for a filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d")
         # Create filename with the timestamp
-        filename = f"google_sheet_export_{timestamp}.csv"
+        filename = f"data/csv/google_sheet_export_{timestamp}.csv"
 
     try:
         # Open the file for writing
