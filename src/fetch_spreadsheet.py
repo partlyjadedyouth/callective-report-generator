@@ -12,9 +12,6 @@ import requests  # HTTP 요청을 보내기 위한 requests 라이브러리
 # Import csv module to handle CSV file operations
 import csv  # CSV 파일 작업을 위한 모듈
 
-# Import datetime to add timestamp to the output filename
-from datetime import datetime  # 파일 이름에 타임스탬프를 추가하기 위한 datetime 모듈
-
 # Import os module for file path operations
 import os  # 파일 경로 작업을 위한 os 모듈
 
@@ -75,31 +72,28 @@ def fetch_google_sheet(sheet_id, sheet_name=None):
 
 
 # Define the function to save data as a CSV file
-def save_to_csv(data, filename=None):
+def save_to_csv(data, filename=None, week_suffix="0주차"):
     """
     Saves the provided data to a CSV file.
 
     Args:
         data (list): A list of rows to save as CSV
         filename (str, optional): The name of the output file.
-                                If None, generates a name with timestamp.
+                                If None, generates a name with week suffix.
+        week_suffix (str, optional): The week suffix to use in the filename if no filename provided.
+                                   Default is "0주차".
 
     Returns:
         str: The path to the saved CSV file, or None if an error occurred
     """
     try:
-        # Generate a default filename with timestamp if none is provided
+        # Generate a default filename with week suffix if none is provided
         if not filename:
             # Ensure the csv directory exists
             os.makedirs("data/csv", exist_ok=True)  # CSV 디렉토리가 없는 경우 생성
 
-            # Get current timestamp in a format suitable for a filename
-            timestamp = datetime.now().strftime(
-                "%Y%m%d"
-            )  # 파일 이름에 적합한 타임스탬프 형식 생성
-
-            # Create filename with the timestamp
-            filename = f"data/csv/google_sheet_export_{timestamp}.csv"  # 타임스탬프가 포함된 파일 이름 생성
+            # Create filename with the week suffix
+            filename = f"data/csv/google_sheet_export_{week_suffix}.csv"  # 주차 정보가 포함된 파일 이름 생성
 
         # Ensure the target directory exists
         os.makedirs(
@@ -157,9 +151,18 @@ def main():
     parser.add_argument(
         "--output", type=str, default=None, help="Output CSV file path (optional)"
     )  # 출력 파일 경로 인수 추가
+    parser.add_argument(
+        "--week",
+        type=int,
+        default=0,
+        help="Week number to use in file names (e.g., 0 for '0주차')",
+    )  # 주차 번호 인수 추가
 
     # Parse the command-line arguments
     args = parser.parse_args()  # 명령줄 인수 파싱
+
+    # Create week suffix
+    week_suffix = f"{args.week}주차"  # 주차 접미사 생성
 
     # Fetch data from the Google Spreadsheet
     sheet_data = fetch_google_sheet(
@@ -170,7 +173,7 @@ def main():
     if sheet_data:
         # Save the fetched data to a CSV file
         output_file = save_to_csv(
-            sheet_data, args.output
+            sheet_data, args.output, week_suffix
         )  # 가져온 데이터를 CSV 파일로 저장
 
         # Check if the CSV file was successfully saved

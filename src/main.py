@@ -13,7 +13,6 @@ This script coordinates the process of:
 # Import required libraries
 import argparse  # Library for parsing command-line arguments
 import os  # Library for operating system functionality
-from datetime import datetime  # Library for working with dates and times
 
 # Import custom modules
 from fetch_spreadsheet import (
@@ -40,65 +39,40 @@ def main():
         help="Google Spreadsheet key/ID",
     )
     parser.add_argument(
-        "--sheet_name",
-        type=str,
-        default=None,  # Add optional argument for sheet name
-        help="Specific sheet name/gid (optional)",
-    )
-    parser.add_argument(
-        "--csv_dir",
-        type=str,
-        default="data/csv",  # Add argument for CSV directory
-        help="Directory to save CSV files (default: data/csv)",
-    )
-    parser.add_argument(
-        "--results_dir",
-        type=str,
-        default="data/results",  # Add argument for results directory
-        help="Directory to save results (default: data/results)",
-    )
-
-    # Add arguments for questionnaire files
-    parser.add_argument(
-        "--bat_primary_path",
-        type=str,  # Add argument for BAT primary path
-        default="data/questionnaires/bat_primary_questionnaires.json",
-        help="Path to the BAT primary questionnaire JSON file",
-    )
-    parser.add_argument(
-        "--bat_secondary_path",
-        type=str,  # Add argument for BAT secondary path
-        default="data/questionnaires/bat_secondary_questionnaires.json",
-        help="Path to the BAT secondary questionnaire JSON file",
-    )
-    parser.add_argument(
-        "--emotional_labor_path",
-        type=str,  # Add argument for emotional labor path
-        default="data/questionnaires/emotional_labor_questionnaires.json",
-        help="Path to the emotional labor questionnaire JSON file",
-    )
-    parser.add_argument(
-        "--stress_path",
-        type=str,  # Add argument for stress path
-        default="data/questionnaires/stress_questionnaires.json",
-        help="Path to the stress questionnaire JSON file",
+        "--week",
+        type=int,
+        default=0,  # Add argument for week number with default value of 0
+        help="Week number to use in file names (e.g., 0 for '0주차')",
     )
 
     # Parse the command-line arguments
     args = parser.parse_args()  # Parse arguments
 
-    # Generate today's date string for filenames
-    today = datetime.now().strftime("%Y%m%d")  # Format current date as YYYYMMDD
+    # Set default values for other parameters
+    sheet_name = None  # Default sheet name is None
+    csv_dir = "data/csv"  # Default directory for CSV files
+    results_dir = "data/results"  # Default directory for results
+
+    # Default questionnaire paths
+    bat_primary_path = "data/questionnaires/bat_primary_questionnaires.json"  # Default BAT primary path
+    bat_secondary_path = "data/questionnaires/bat_secondary_questionnaires.json"  # Default BAT secondary path
+    emotional_labor_path = "data/questionnaires/emotional_labor_questionnaires.json"  # Default emotional labor path
+    stress_path = (
+        "data/questionnaires/stress_questionnaires.json"  # Default stress path
+    )
+
+    # Create week suffix for filenames
+    week_suffix = f"{args.week}주차"  # Format week number as "0주차", "1주차", etc.
 
     # Create necessary directories if they don't exist
-    os.makedirs(args.csv_dir, exist_ok=True)  # Create CSV directory if it doesn't exist
+    os.makedirs(csv_dir, exist_ok=True)  # Create CSV directory if it doesn't exist
     os.makedirs(
-        args.results_dir, exist_ok=True
+        results_dir, exist_ok=True
     )  # Create results directory if it doesn't exist
 
     # Define the CSV output path
     csv_path = os.path.join(
-        args.csv_dir, f"google_sheet_export_{today}.csv"
+        csv_dir, f"google_sheet_export_{week_suffix}.csv"
     )  # Construct path for CSV output file
 
     # Step 1: Fetch data from Google Spreadsheet
@@ -106,7 +80,7 @@ def main():
         f"Fetching data from Google Spreadsheet: {args.sheet_key}"
     )  # Print status message
     sheet_data = fetch_google_sheet(
-        args.sheet_key, args.sheet_name
+        args.sheet_key, sheet_name
     )  # Fetch spreadsheet data
 
     # Check if data was successfully fetched
@@ -127,10 +101,10 @@ def main():
 
     # Step 3: Prepare questionnaire paths dictionary
     questionnaire_paths = {  # Create dictionary of questionnaire paths
-        "BAT_primary": args.bat_primary_path,  # BAT primary path
-        "BAT_secondary": args.bat_secondary_path,  # BAT secondary path
-        "emotional_labor": args.emotional_labor_path,  # Emotional labor path
-        "stress": args.stress_path,  # Stress path
+        "BAT_primary": bat_primary_path,  # BAT primary path
+        "BAT_secondary": bat_secondary_path,  # BAT secondary path
+        "emotional_labor": emotional_labor_path,  # Emotional labor path
+        "stress": stress_path,  # Stress path
     }
 
     # Step 4: Parse the CSV data to generate questionnaire results
@@ -138,8 +112,8 @@ def main():
     result_file = parse_bat_primary_results(  # Parse questionnaire results
         csv_path=saved_path,
         questionnaire_path=questionnaire_paths,
-        output_dir=args.results_dir,
-        date_suffix=today,
+        output_dir=results_dir,
+        week_suffix=week_suffix,
     )
 
     # Check if results were successfully generated
@@ -158,6 +132,6 @@ if __name__ == "__main__":
     Execute the main function when the script is run directly.
 
     Example usage:
-    python src/main.py --sheet_key=1ZyVnhjCnsWN8zKS1Aov4yHnR_Hjdm1DuLDCIeWqwc48
+    python src/main.py --sheet_key=1ZyVnhjCnsWN8zKS1Aov4yHnR_Hjdm1DuLDCIeWqwc48 --week=0
     """
     exit(main())  # Run main function and use its return code as exit code

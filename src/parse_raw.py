@@ -12,11 +12,10 @@ and generates a structured JSON file with calculated scores based on questionnai
 import pandas as pd  # Library for data manipulation and analysis
 import json  # Library for JSON data handling
 import os  # Library for file and directory operations
-from datetime import datetime  # Library for date and time handling
 
 
 def parse_bat_primary_results(
-    csv_path, questionnaire_path, output_dir="data/results", date_suffix=None
+    csv_path, questionnaire_path, output_dir="data/results", week_suffix="0주차"
 ):
     """
     Parse questionnaire results from CSV and generate a JSON file with calculated scores for all questionnaire types.
@@ -26,28 +25,22 @@ def parse_bat_primary_results(
         questionnaire_path (str): Path to the JSON file containing questionnaire definitions
                                  (can be a dict with paths to each questionnaire type)
         output_dir (str): Directory to save the results JSON file
-        date_suffix (str): Date suffix for the output filename. If None, today's date is used.
+        week_suffix (str): Week suffix for the output filename, e.g., "0주차". Default is "0주차".
 
     Returns:
         str: Path to the generated results file, or None if an error occurred
     """
     try:
-        # Use today's date if no date suffix is provided
-        if date_suffix is None:  # If no date suffix is provided
-            date_suffix = datetime.now().strftime(
-                "%Y%m%d"
-            )  # Format current date as YYYYMMDD
-
         # Ensure output directory exists
         os.makedirs(
             output_dir, exist_ok=True
         )  # Create output directory if it doesn't exist
 
-        # Load CSV data
+        # Load CSV data - explicitly specify the dtype for phone column to keep leading zeros
         print(f"Loading CSV data from: {csv_path}")  # Print status message
         df = pd.read_csv(
-            csv_path, encoding="utf-8"
-        )  # Load CSV file as pandas DataFrame
+            csv_path, encoding="utf-8", dtype={"휴대폰 번호 뒷자리 (4자리)": str}
+        )  # Load CSV file as pandas DataFrame with phone numbers as strings
 
         # Prepare questionnaire paths
         questionnaire_paths = {}  # Dictionary to store questionnaire paths
@@ -137,6 +130,19 @@ def parse_bat_primary_results(
         print(f"Processing {len(df)} responses...")  # Print status message
 
         for _, row in df.iterrows():  # For each row (respondent)
+            # Process phone number to ensure it's properly formatted with 4 digits
+            phone_number = ""  # Initialize phone number variable
+            if pd.notna(
+                row["휴대폰 번호 뒷자리 (4자리)"]
+            ):  # If phone number is not NaN
+                # Get phone number as string and ensure it's exactly 4 digits with leading zeros if needed
+                phone_raw = str(
+                    row["휴대폰 번호 뒷자리 (4자리)"]
+                ).strip()  # Get raw phone number and strip whitespace
+                phone_number = phone_raw.zfill(
+                    4
+                )  # Pad with leading zeros if needed to make 4 digits
+
             # Extract basic information
             person_data = {  # Create person data dictionary
                 "name": (
@@ -144,6 +150,7 @@ def parse_bat_primary_results(
                 ),  # Name (trimmed, handle NaN)
                 "team": row["소속"] if pd.notna(row["소속"]) else "",  # Team
                 "role": row["직무"] if pd.notna(row["직무"]) else "",  # Role
+                "phone": phone_number,  # Phone number properly formatted with 4 digits
                 "email": (
                     row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"]
                     if pd.notna(row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"])
@@ -196,7 +203,7 @@ def parse_bat_primary_results(
             result_list.append(person_data)  # Add to results list
 
         # Generate output file path
-        output_file = f"{output_dir}/questionnaire_results_{date_suffix}.json"  # Construct output file path
+        output_file = f"{output_dir}/questionnaire_results_{week_suffix}.json"  # Construct output file path with week suffix
 
         # Save results to JSON file
         print(f"Saving results to: {output_file}")  # Print status message
@@ -218,11 +225,30 @@ def parse_bat_primary_results(
 
 # Run as standalone script
 if __name__ == "__main__":
-    # Get today's date
-    today = datetime.now().strftime("%Y%m%d")  # Format current date as YYYYMMDD
+    # Set up command-line argument parsing
+    import argparse  # Library for parsing command-line arguments
 
-    # Set default file paths
-    csv_file_path = f"data/csv/google_sheet_export_{today}.csv"  # Default CSV file path
+    parser = argparse.ArgumentParser(
+        description="Parse questionnaire results from a CSV file"
+    )  # Create argument parser
+    parser.add_argument(
+        "--csv_path",
+        type=str,
+        required=True,
+        help="Path to the CSV file containing questionnaire responses",
+    )  # Add CSV path argument
+    parser.add_argument(
+        "--week",
+        type=int,
+        default=0,
+        help="Week number to use in file names (e.g., 0 for '0주차')",
+    )  # Add week number argument
+
+    # Parse the command-line arguments
+    args = parser.parse_args()  # Parse arguments
+
+    # Create week suffix
+    week_suffix = f"{args.week}주차"  # Format week number as "0주차", "1주차", etc.
 
     # Set questionnaire paths
     questionnaire_paths = {  # Dictionary of questionnaire paths
@@ -233,6 +259,19 @@ if __name__ == "__main__":
     }
 
     # Parse results
-    parse_bat_primary_results(  # Call parsing function
-        csv_path=csv_file_path, questionnaire_path=questionnaire_paths
+    result_file = parse_bat_primary_results(  # Call parsing function
+        csv_path=args.csv_path,
+        questionnaire_path=questionnaire_paths,
+        output_dir="data/results",
+        week_suffix=week_suffix,
     )
+
+    # Check if results were successfully generated
+    if result_file:  # If results were generated
+        print(
+            f"Process completed successfully. Results saved to {result_file}"
+        )  # Print success message
+        exit(0)  # Exit with success code
+    else:
+        print("Failed to generate questionnaire results.")  # Print error message
+        exit(1)  # Exit with error code
