@@ -9,8 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
-# sheet csv
+# Raw data
 *.csv
+bat_primary_results_*
 
 # codebase
 codebase.md
