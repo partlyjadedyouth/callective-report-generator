@@ -10,8 +10,8 @@ wheels/
 .venv
 
 # Raw data
-*.csv
-bat_primary_results_*
+data/csv/*
+data/results/*
 
 # codebase
 codebase.md

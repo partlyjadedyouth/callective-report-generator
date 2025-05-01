@@ -7,7 +7,7 @@ Report Generator Main Script
 This script coordinates the process of:
 1. Fetching data from a Google Spreadsheet using its key
 2. Saving the data as a CSV file
-3. Parsing the data to generate BAT primary results
+3. Parsing the data to generate questionnaire results for multiple questionnaire types
 """
 
 # Import required libraries
@@ -20,9 +20,9 @@ from fetch_spreadsheet import (
     fetch_google_sheet,
     save_to_csv,
 )  # Import functions for fetching and saving spreadsheet data
-from parse_bat_primary import (
+from parse_raw import (
     parse_bat_primary_results,
-)  # Import function for parsing BAT primary results
+)  # Import function for parsing questionnaire results
 
 
 def main():
@@ -57,11 +57,31 @@ def main():
         default="data/results",  # Add argument for results directory
         help="Directory to save results (default: data/results)",
     )
+
+    # Add arguments for questionnaire files
     parser.add_argument(
-        "--questionnaire_path",
-        type=str,  # Add argument for questionnaire path
+        "--bat_primary_path",
+        type=str,  # Add argument for BAT primary path
         default="data/questionnaires/bat_primary_questionnaires.json",
         help="Path to the BAT primary questionnaire JSON file",
+    )
+    parser.add_argument(
+        "--bat_secondary_path",
+        type=str,  # Add argument for BAT secondary path
+        default="data/questionnaires/bat_secondary_questionnaires.json",
+        help="Path to the BAT secondary questionnaire JSON file",
+    )
+    parser.add_argument(
+        "--emotional_labor_path",
+        type=str,  # Add argument for emotional labor path
+        default="data/questionnaires/emotional_labor_questionnaires.json",
+        help="Path to the emotional labor questionnaire JSON file",
+    )
+    parser.add_argument(
+        "--stress_path",
+        type=str,  # Add argument for stress path
+        default="data/questionnaires/stress_questionnaires.json",
+        help="Path to the stress questionnaire JSON file",
     )
 
     # Parse the command-line arguments
@@ -105,11 +125,19 @@ def main():
         print("Failed to save data to CSV file. Exiting.")  # Print error message
         return 1  # Return error code
 
-    # Step 3: Parse the CSV data to generate BAT primary results
-    print("Parsing BAT primary results...")  # Print status message
-    result_file = parse_bat_primary_results(  # Parse BAT primary results
+    # Step 3: Prepare questionnaire paths dictionary
+    questionnaire_paths = {  # Create dictionary of questionnaire paths
+        "BAT_primary": args.bat_primary_path,  # BAT primary path
+        "BAT_secondary": args.bat_secondary_path,  # BAT secondary path
+        "emotional_labor": args.emotional_labor_path,  # Emotional labor path
+        "stress": args.stress_path,  # Stress path
+    }
+
+    # Step 4: Parse the CSV data to generate questionnaire results
+    print("Parsing questionnaire results...")  # Print status message
+    result_file = parse_bat_primary_results(  # Parse questionnaire results
         csv_path=saved_path,
-        questionnaire_path=args.questionnaire_path,
+        questionnaire_path=questionnaire_paths,
         output_dir=args.results_dir,
         date_suffix=today,
     )
@@ -121,7 +149,7 @@ def main():
         )  # Print success message
         return 0  # Return success code
     else:
-        print("Failed to generate BAT primary results.")  # Print error message
+        print("Failed to generate questionnaire results.")  # Print error message
         return 1  # Return error code
 
 
