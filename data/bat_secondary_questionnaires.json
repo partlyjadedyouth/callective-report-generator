@@ -1,7 +1,7 @@
 {
   "BAT-secondary": {
     "Q1": {
-      "type": "psychological_complaints",
+      "type": "심리적 호소",
       "content": "나는 잠 드는 것이나, 깨지 않고 자는 데 어려움이 있다",
       "scores": {
         "전혀아니다": 1,
@@ -12,7 +12,7 @@
       }
     },
     "Q2": {
-      "type": "psychological_complaints",
+      "type": "심리적 호소",
       "content": "나는 걱정을 많이 하는 편이다",
       "scores": {
         "전혀아니다": 1,
@@ -23,7 +23,7 @@
       }
     },
     "Q3": {
-      "type": "psychological_complaints",
+      "type": "심리적 호소",
       "content": "나는 긴장감을 느끼고 스트레스를 받는다",
       "scores": {
         "전혀아니다": 1,
@@ -34,7 +34,7 @@
       }
     },
     "Q4": {
-      "type": "psychological_complaints",
+      "type": "심리적 호소",
       "content": "나는 불안하고(또는) 공황발작에 시달린다",
       "scores": {
         "전혀아니다": 1,
@@ -45,7 +45,7 @@
       }
     },
     "Q5": {
-      "type": "psychological_complaints",
+      "type": "심리적 호소",
       "content": "큰 소리가 나고 사람이 많은 것에 방해를 받는다",
       "scores": {
         "전혀아니다": 1,
@@ -56,7 +56,7 @@
       }
     },
     "Q6": {
-      "type": "physical_complaints",
+      "type": "신체적 호소",
       "content": "나는 심장 두근거림이나 가슴통증이 있다",
       "scores": {
         "전혀아니다": 1,
@@ -67,7 +67,7 @@
       }
     },
     "Q7": {
-      "type": "physical_complaints",
+      "type": "신체적 호소",
       "content": "나는 위장쪽이 탈이 나곤 한다",
       "scores": {
         "전혀아니다": 1,
@@ -78,7 +78,7 @@
       }
     },
     "Q8": {
-      "type": "physical_complaints",
+      "type": "신체적 호소",
       "content": "나는 두통이 있다",
       "scores": {
         "전혀아니다": 1,
@@ -89,7 +89,7 @@
       }
     },
     "Q9": {
-      "type": "physical_complaints",
+      "type": "신체적 호소",
       "content": "나는 목, 어깨, 혹은 허리 등에 근육통이 있다",
       "scores": {
         "전혀아니다": 1,
@@ -100,7 +100,7 @@
       }
     },
     "Q10": {
-      "type": "physical_complaints",
+      "type": "신체적 호소",
       "content": "나는 종종 아프다",
       "scores": {
         "전혀아니다": 1,
