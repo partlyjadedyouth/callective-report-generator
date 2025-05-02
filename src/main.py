@@ -8,6 +8,7 @@ This script coordinates the process of:
 1. Fetching data from a Google Spreadsheet using its key
 2. Saving the data as a CSV file
 3. Parsing the data to generate questionnaire results for multiple questionnaire types
+4. Analyzing the survey results and generating per-participant statistics across weeks
 """
 
 # Import required libraries
@@ -22,6 +23,7 @@ from fetch_spreadsheet import (
 from parse_raw import (
     parse_bat_primary_results,
 )  # Import function for parsing questionnaire results
+from analyze_results import analyze_results  # Import function for analyzing results
 
 
 def main():
@@ -52,6 +54,7 @@ def main():
     sheet_name = None  # Default sheet name is None
     csv_dir = "data/csv"  # Default directory for CSV files
     results_dir = "data/results"  # Default directory for results
+    analysis_dir = "data/analysis"  # Default directory for analysis results
 
     # Default questionnaire paths
     bat_primary_path = "data/questionnaires/bat_primary_questionnaires.json"  # Default BAT primary path
@@ -69,6 +72,9 @@ def main():
     os.makedirs(
         results_dir, exist_ok=True
     )  # Create results directory if it doesn't exist
+    os.makedirs(
+        analysis_dir, exist_ok=True
+    )  # Create analysis directory if it doesn't exist
 
     # Define the CSV output path
     csv_path = os.path.join(
@@ -117,13 +123,29 @@ def main():
     )
 
     # Check if results were successfully generated
-    if result_file:  # If results were generated
+    if not result_file:  # If results were not generated
+        print("Failed to generate questionnaire results.")  # Print error message
+        return 1  # Return error code
+
+    # Step 5: Analyze the survey results for each participant
+    print(
+        "Analyzing survey results for each participant across all weeks..."
+    )  # Print status message
+    analysis_file = analyze_results(  # Analyze the survey results
+        results_dir=results_dir, output_dir=analysis_dir
+    )
+
+    # Check if analysis was successfully generated
+    if analysis_file:  # If analysis was generated
         print(
-            f"Process completed successfully. Results saved to {result_file}"
+            f"Participant analysis results saved to {analysis_file}"
+        )  # Print success message
+        print(
+            f"Process completed successfully. Results saved to {result_file} and participant analysis to {analysis_file}"
         )  # Print success message
         return 0  # Return success code
     else:
-        print("Failed to generate questionnaire results.")  # Print error message
+        print("Failed to analyze survey results.")  # Print error message
         return 1  # Return error code
 
 
