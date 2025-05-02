@@ -203,7 +203,7 @@ def parse_bat_primary_results(
             result_list.append(person_data)  # Add to results list
 
         # Generate output file path
-        output_file = f"{output_dir}/questionnaire_results_{week_suffix}.json"  # Construct output file path with week suffix
+        output_file = f"{output_dir}/{week_suffix}.json"  # Construct output file path with week suffix
 
         # Save results to JSON file
         print(f"Saving results to: {output_file}")  # Print status message
