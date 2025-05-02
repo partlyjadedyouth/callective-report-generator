@@ -7,7 +7,8 @@ Survey Results Analyzer
 This script analyzes the survey results from the 'results' directory:
 1. Calculates per-participant averages for BAT_primary, BAT_secondary, emotional_labor, and stress
 2. Calculates per-participant type-specific averages within each category
-3. Saves the analysis as a JSON file in the 'data/analysis' directory
+3. Generates summary statistics for all employees and individual teams
+4. Saves the analysis as a JSON file in the 'data/analysis' directory
 """
 
 # Import required libraries
@@ -213,13 +214,126 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
     # Convert the dictionary of participants to a list
     participants_list = list(all_participants.values())
 
+    # Generate team and overall analysis
+    group_analysis = generate_group_analysis(all_participants)
+
+    # Combine individual and group analysis
+    final_analysis = {"participants": participants_list, "groups": group_analysis}
+
     # Save the analysis results to JSON file
     output_file = os.path.join(output_dir, "analysis.json")
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(participants_list, f, ensure_ascii=False, indent=2)
+        json.dump(final_analysis, f, ensure_ascii=False, indent=2)
 
-    print(f"Participant analysis completed and saved to {output_file}")
+    print(f"Participant and group analysis completed and saved to {output_file}")
     return output_file
+
+
+def generate_group_analysis(all_participants):
+    """
+    Generate analysis for all employees and individual teams.
+
+    Args:
+        all_participants (dict): Dictionary of all participants and their analysis
+
+    Returns:
+        dict: Dictionary containing analysis for all employees and each team
+    """
+    # Define the groups to analyze
+    groups = {
+        "회사": lambda p: True,  # All employees
+        "상담 1팀": lambda p: p.get("team") == "상담 1팀",
+        "상담 2팀": lambda p: p.get("team") == "상담 2팀",
+        "상담 3팀": lambda p: p.get("team") == "상담 3팀",
+        "상담 4팀": lambda p: p.get("team") == "상담 4팀",
+    }
+
+    group_analysis = {}
+
+    # For each group, calculate aggregated data
+    for group_name, filter_func in groups.items():
+        group_analysis[group_name] = {"analysis": {}}
+
+        # Filter participants belonging to this group
+        filtered_participants = {
+            name: data for name, data in all_participants.items() if filter_func(data)
+        }
+
+        if not filtered_participants:
+            print(f"No participants found for group: {group_name}")
+            continue
+
+        # Get all the weeks available across all participants
+        all_weeks = set()
+        for participant_data in filtered_participants.values():
+            all_weeks.update(participant_data["analysis"].keys())
+
+        # For each week, calculate aggregated statistics
+        for week in all_weeks:
+            week_data = {"category_averages": {}, "type_averages": {}}
+
+            # Collect all scores for this week across participants in this group
+            category_scores = {
+                "BAT_primary": [],
+                "BAT_secondary": [],
+                "emotional_labor": [],
+                "stress": [],
+            }
+
+            type_scores = {
+                "BAT_primary": defaultdict(list),
+                "BAT_secondary": defaultdict(list),
+                "emotional_labor": defaultdict(list),
+                "stress": defaultdict(list),
+            }
+
+            # Collect data from all participants in this group for this week
+            for participant_data in filtered_participants.values():
+                if week in participant_data["analysis"]:
+                    participant_week_data = participant_data["analysis"][week]
+
+                    # Collect category averages
+                    for category, value in participant_week_data[
+                        "category_averages"
+                    ].items():
+                        if value is not None:
+                            category_scores[category].append(value)
+
+                    # Collect type averages
+                    for category, type_data in participant_week_data[
+                        "type_averages"
+                    ].items():
+                        for type_name, value in type_data.items():
+                            if value is not None:
+                                type_scores[category][type_name].append(value)
+
+            # Calculate category averages for this group and week
+            for category, scores in category_scores.items():
+                if scores:
+                    week_data["category_averages"][category] = round(
+                        statistics.mean(scores), 2
+                    )
+                else:
+                    week_data["category_averages"][category] = None
+
+            # Calculate type averages for this group and week
+            for category, types_dict in type_scores.items():
+                week_data["type_averages"][category] = {}
+                for type_name, scores in types_dict.items():
+                    if scores:
+                        week_data["type_averages"][category][type_name] = round(
+                            statistics.mean(scores), 2
+                        )
+                    else:
+                        week_data["type_averages"][category][type_name] = None
+
+            # Add this week's analysis to the group's analysis
+            group_analysis[group_name]["analysis"][week] = week_data
+
+        # Add participant count to the group data
+        group_analysis[group_name]["participant_count"] = len(filtered_participants)
+
+    return group_analysis
 
 
 def load_questionnaire_types():

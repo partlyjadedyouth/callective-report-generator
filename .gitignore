@@ -12,6 +12,7 @@ wheels/
 # Raw data
 data/csv/*
 data/results/*
+data/analysis/*
 
 # codebase
 codebase.md
