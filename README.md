@@ -53,11 +53,3 @@ The analysis results are structured with a participant-oriented approach:
 ```
 
 This allows comparing a participant's responses across different weeks.
-
-```bash
-uv sync
-```
-
-```bash
-uv pip install -r requirements.txt
-```
