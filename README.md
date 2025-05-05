@@ -15,7 +15,9 @@ brew install uv
 
 ```bash
 cd ~/
+```
 
+```bash
 git clone https://github.com/partlyjadedyouth/callective-report-generator
 ```
 
@@ -23,7 +25,9 @@ git clone https://github.com/partlyjadedyouth/callective-report-generator
 
 ```bash
 cd ~/callective-report-generator
+```
 
+```bash
 uv add -r requirements.txt
 ```
 
@@ -32,3 +36,6 @@ uv add -r requirements.txt
 ```bash
 uv run src/main.py --sheet_key=[SHEET_KEY] --week=[WEEK_NUMBER]
 ```
+
+SHEET_KEY는 구글 스프레드시트 URL에서 `/d/` 와 `/edit?gid=...` 사이에 있는 부분입니다.
+`https://docs.google.com/spreadsheets/d/[SHEET_KEY]/edit?gid=247967581#gid=247967581`
