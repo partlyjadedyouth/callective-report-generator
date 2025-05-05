@@ -14,6 +14,7 @@ This script coordinates the process of:
 # Import required libraries
 import argparse  # Library for parsing command-line arguments
 import os  # Library for operating system functionality
+import subprocess  # Library for running external processes
 
 # Import custom modules
 from fetch_spreadsheet import (
@@ -143,7 +144,31 @@ def main():
         print(
             f"Process completed successfully. Results saved to {result_file} and participant analysis to {analysis_file}"
         )  # Print success message
-        return 0  # Return success code
+
+        # Step 6: Generate personal reports
+        print("Generating personal reports...")  # Print status message
+        try:
+            # Define the path to the personal report generator script
+            personal_report_script = (
+                "src/personal_report_generator.py"  # Path to the script
+            )
+            # Execute the personal report generator script
+            subprocess.run(
+                ["python3", personal_report_script], check=True
+            )  # Run the script using python3 and check for errors
+            print(f"Successfully generated personal reports.")  # Print success message
+            return 0  # Return success code
+        except (
+            subprocess.CalledProcessError
+        ) as e:  # Catch errors during script execution
+            print(f"Failed to generate personal reports: {e}")  # Print error message
+            return 1  # Return error code
+        except FileNotFoundError:  # Catch error if script not found
+            print(
+                f"Error: The script {personal_report_script} was not found."
+            )  # Print file not found error
+            return 1  # Return error code
+
     else:
         print("Failed to analyze survey results.")  # Print error message
         return 1  # Return error code
