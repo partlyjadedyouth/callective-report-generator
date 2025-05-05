@@ -1,6 +1,7 @@
-# 필요한 JSON 라이브러리 임포트
 import json
 import os
+from playwright.sync_api import sync_playwright
+from pathlib import Path
 
 # 파일 저장 전 디렉토리 경로 확인 및 생성
 # os.makedirs()는 해당 경로의 모든 디렉토리를 생성함
@@ -425,7 +426,7 @@ for participant in participants:
                             <!-- 첫번째 행 -->
                             <div class="flex justify-between mb-3">
                                 <div class="font-medium">점수</div>
-                                <div class="font-medium text-{"green" if stress_this_week <= cutoff_stress[0] else "yellow" if stress_this_week <= cutoff_stress[1] else "red"}-600">{stress_this_week} ({'정상' if stress_this_week <= cutoff_stress[0] else '위험' if stress_this_week <= cutoff_stress[1] else '고위험'})</div>
+                                <div class="font-medium text-{"green" if stress_this_week <= cutoff_stress[0] else "yellow" if stress_this_week <= cutoff_stress[1] else "orange" if stress_this_week <= cutoff_stress[2] else "red"}-600">{stress_this_week} ({'정상' if stress_this_week <= cutoff_stress[0] else '주의' if stress_this_week <= cutoff_stress[1] else '위험' if stress_this_week <= cutoff_stress[2] else '고위험'})</div>
                             </div>
                             <hr class="w-full border-t border-gray-300 mb-3">
 
@@ -446,7 +447,7 @@ for participant in participants:
                             <!-- 세번째 행 -->
                             <div class="flex justify-between mb-3">
                                 <div class="font-medium">회사 평균</div>
-                                <div class="font-medium text-{"green" if company_stress_this_week <= cutoff_stress[0] else "yellow" if company_stress_this_week <= cutoff_stress[1] else "red"}-600">{company_stress_this_week} ({'정상' if company_stress_this_week <= cutoff_stress[0] else '위험' if company_stress_this_week <= cutoff_stress[1] else '고위험'})</div>
+                                <div class="font-medium text-{"green" if company_stress_this_week <= cutoff_stress[0] else "yellow" if company_stress_this_week <= cutoff_stress[1] else "orange" if company_stress_this_week <= cutoff_stress[2] else "red"}-600">{company_stress_this_week} ({'정상' if company_stress_this_week <= cutoff_stress[0] else '주의' if company_stress_this_week <= cutoff_stress[1] else '위험' if company_stress_this_week <= cutoff_stress[2] else '고위험'})</div>
                             </div>
 
                             <!-- n주차 결과 -->
@@ -641,11 +642,30 @@ for participant in participants:
 </html>
     """
 
-    # 이제 안전하게 파일 열기 가능
-    with open(
-        f"data/reports/html/{name}_{week}주차.html", "w", encoding="utf-8"
-    ) as file:
+    # HTML 파일 저장 경로
+    html_path = Path(f"data/reports/html/{name}_{week}주차.html").resolve()
+
+    with open(html_path, "w", encoding="utf-8") as file:
         # 파일 쓰기 작업 계속 진행
         file.write(html)
 
     # PDF 파일 생성
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        # page.goto(f"file://{html_path}") # Navigate to the local HTML file path
+        page.goto(
+            f"file://{html_path}", wait_until="domcontentloaded"
+        )  # Navigate to the local HTML file path and wait for DOM content to be loaded
+        # page.wait_for_timeout(2000)  # 2초 대기 # Wait for a fixed 2 seconds
+        page.wait_for_load_state(
+            "networkidle"
+        )  # Wait until the network is idle, allowing Tailwind CSS to process and apply styles # Wait until the network is idle, allowing Tailwind CSS to process and apply styles
+        # page.pdf(path=f"data/reports/pdf/{name}_{week}주차.pdf", format="A4") # Generate PDF # Generate PDF
+        page.pdf(
+            path=f"data/reports/pdf/{name}_{week}주차.pdf",
+            format="A4",
+            print_background=True,
+        )  # Generate PDF, ensuring background graphics (like colors) are printed
+        # browser.close() # Close the browser # Close the browser
+        browser.close()  # Close the browser
