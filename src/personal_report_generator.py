@@ -23,7 +23,7 @@ with open(analysis_file_path, "r", encoding="utf-8") as file:
 # FileSystemLoader는 템플릿 파일이 위치한 디렉토리를 지정함
 env = Environment(loader=FileSystemLoader("templates/"))
 # 템플릿 파일 로드
-template = env.get_template("report_template.html")
+template = env.get_template("personal_template.html")
 
 # 절단점
 cutoff_burnout_primary = [2.58, 3.01]
@@ -134,7 +134,6 @@ for participant in participants:
         page.goto(
             f"file://{html_path}", wait_until="domcontentloaded"
         )  # Navigate to the local HTML file path and wait for DOM content to be loaded
-        # page.wait_for_timeout(2000)  # 2초 대기 # Wait for a fixed 2 seconds
         page.wait_for_load_state(
             "networkidle"
         )  # Wait until the network is idle, allowing Tailwind CSS to process and apply styles # Wait until the network is idle, allowing Tailwind CSS to process and apply styles
@@ -146,3 +145,5 @@ for participant in participants:
         )  # Generate PDF, ensuring background graphics (like colors) are printed
         # browser.close() # Close the browser # Close the browser
         browser.close()  # Close the browser
+
+    break
