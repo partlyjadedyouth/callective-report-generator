@@ -9,7 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 # exist_ok=True 옵션은 디렉토리가 이미 존재해도 오류를 발생시키지 않음
 os.makedirs("data/reports/html", exist_ok=True)
 os.makedirs("data/reports/pdf", exist_ok=True)
-os.makedirs("src/templates", exist_ok=True)
+os.makedirs("templates", exist_ok=True)
 
 # analysis.json 파일 경로 설정
 analysis_file_path = "data/analysis/analysis.json"
