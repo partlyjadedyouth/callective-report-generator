@@ -10,6 +10,7 @@ This script coordinates the process of:
 3. Parsing the data to generate questionnaire results for multiple questionnaire types
 4. Analyzing the survey results and generating per-participant statistics across weeks
 5. Fetching app usage data from another Google Spreadsheet and saving it as a CSV
+6. Analyzing app usage data and generating app_analysis.json
 """
 
 # Import required libraries
@@ -26,6 +27,9 @@ from parse_raw import (
     parse_bat_primary_results,
 )  # Import function for parsing questionnaire results
 from analyze_results import analyze_results  # Import function for analyzing results
+from analyze_app_usage import (
+    analyze_app_usage,
+)  # Import function for analyzing app usage data
 
 
 def main():
@@ -114,6 +118,7 @@ def main():
         return 1  # Return error code
 
     # Step 3: Fetch app usage data if specified
+    app_usage_saved_path = None  # Initialize app usage saved path
     if args.app_usage_sheet_key:  # If app usage spreadsheet key is provided
         # Define the app usage CSV output path
         app_usage_csv_path = os.path.join(
@@ -182,40 +187,58 @@ def main():
     )
 
     # Check if analysis was successfully generated
-    if analysis_file:  # If analysis was generated
-        print(
-            f"Participant analysis results saved to {analysis_file}"
-        )  # Print success message
-        print(
-            f"Process completed successfully. Results saved to {result_file} and participant analysis to {analysis_file}"
-        )  # Print success message
-
-        # Step 7: Generate personal reports
-        print("Generating personal reports...")  # Print status message
-        try:
-            # Define the path to the personal report generator script
-            personal_report_script = (
-                "src/personal_report_generator.py"  # Path to the script
-            )
-            # Execute the personal report generator script
-            subprocess.run(
-                ["python3", personal_report_script], check=True
-            )  # Run the script using python3 and check for errors
-            print(f"Successfully generated personal reports.")  # Print success message
-            return 0  # Return success code
-        except (
-            subprocess.CalledProcessError
-        ) as e:  # Catch errors during script execution
-            print(f"Failed to generate personal reports: {e}")  # Print error message
-            return 1  # Return error code
-        except FileNotFoundError:  # Catch error if script not found
-            print(
-                f"Error: The script {personal_report_script} was not found."
-            )  # Print file not found error
-            return 1  # Return error code
-
-    else:
+    if not analysis_file:  # If analysis failed
         print("Failed to analyze survey results.")  # Print error message
+        return 1  # Return error code
+
+    print(
+        f"Participant analysis results saved to {analysis_file}"
+    )  # Print success message
+
+    # Step 7: Analyze app usage data if available
+    app_analysis_file = None  # Initialize app analysis file path
+    if app_usage_saved_path:  # If app usage data was saved
+        print("Analyzing app usage data...")  # Print status message
+        app_analysis_file = analyze_app_usage(  # Analyze app usage data
+            csv_dir=csv_dir, output_dir=analysis_dir
+        )
+
+        # Check if app usage analysis was successfully generated
+        if not app_analysis_file:  # If app usage analysis failed
+            print(
+                "Failed to analyze app usage data. Continuing without app usage analysis."
+            )  # Print warning message
+        else:
+            print(
+                f"App usage analysis results saved to {app_analysis_file}"
+            )  # Print success message
+
+    # Print success message for the whole process
+    success_message = f"Process completed successfully. Results saved to {result_file} and participant analysis to {analysis_file}"
+    if app_analysis_file:  # If app usage analysis was generated
+        success_message += f", app usage analysis to {app_analysis_file}"
+    print(success_message)  # Print success message
+
+    # Step 8: Generate personal reports
+    print("Generating personal reports...")  # Print status message
+    try:
+        # Define the path to the personal report generator script
+        personal_report_script = (
+            "src/personal_report_generator.py"  # Path to the script
+        )
+        # Execute the personal report generator script
+        subprocess.run(
+            ["python3", personal_report_script], check=True
+        )  # Run the script using python3 and check for errors
+        print(f"Successfully generated personal reports.")  # Print success message
+        return 0  # Return success code
+    except subprocess.CalledProcessError as e:  # Catch errors during script execution
+        print(f"Failed to generate personal reports: {e}")  # Print error message
+        return 1  # Return error code
+    except FileNotFoundError:  # Catch error if script not found
+        print(
+            f"Error: The script {personal_report_script} was not found."
+        )  # Print file not found error
         return 1  # Return error code
 
 
