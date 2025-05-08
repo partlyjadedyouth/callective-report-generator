@@ -27,6 +27,10 @@ template = env.get_template("personal_template.html")
 
 # 절단점
 cutoff_burnout_primary = [2.58, 3.01]
+cutoff_burnout_exhaustion = [3.05, 3.30]
+cutoff_burnout_depersonalization = [2.49, 3.09]
+cutoff_burnout_cognitive_regulation = [2.69, 3.09]
+cutoff_burnout_emotional_regulation = [2.09, 2.89]
 cutoff_burnout_secondary = [2.84, 3.34]
 cutoff_stress = [44.4, 50.0, 55.6]
 cutoff_emotional_labor = [76.66, 72.21, 63.88, 49.99, 45.23]
@@ -54,6 +58,26 @@ for participant in participants:
     emotional_labor_this_week = participant["analysis"][f"{week}주차"]["type_averages"][
         "emotional_labor"
     ]
+
+    # 탈진 점수 추출
+    burnout_exhaustion_this_week = participant["analysis"][f"{week}주차"][
+        "type_averages"
+    ]["BAT_primary"].get("탈진", 0)
+
+    # 심적 거리 점수 추출
+    burnout_depersonalization_this_week = participant["analysis"][f"{week}주차"][
+        "type_averages"
+    ]["BAT_primary"].get("심적 거리", 0)
+
+    # 인지적 조절 점수 추출
+    burnout_cognitive_regulation_this_week = participant["analysis"][f"{week}주차"][
+        "type_averages"
+    ]["BAT_primary"].get("인지적 조절", 0)
+
+    # 정서적 조절 점수 추출
+    burnout_emotional_regulation_this_week = participant["analysis"][f"{week}주차"][
+        "type_averages"
+    ]["BAT_primary"].get("정서적 조절", 0)
 
     # 해당 참여자의 지난 주의 심리검사 점수
     burnout_primary_last_week = (
@@ -99,10 +123,18 @@ for participant in participants:
         "week": week,
         "cutoff_burnout_primary": cutoff_burnout_primary,
         "cutoff_burnout_secondary": cutoff_burnout_secondary,
+        "cutoff_burnout_exhaustion": cutoff_burnout_exhaustion,
+        "cutoff_burnout_depersonalization": cutoff_burnout_depersonalization,
+        "cutoff_burnout_cognitive_regulation": cutoff_burnout_cognitive_regulation,
+        "cutoff_burnout_emotional_regulation": cutoff_burnout_emotional_regulation,
         "cutoff_stress": cutoff_stress,
         "cutoff_emotional_labor": cutoff_emotional_labor,
         "burnout_primary_this_week": burnout_primary_this_week,
         "burnout_secondary_this_week": burnout_secondary_this_week,
+        "burnout_exhaustion_this_week": burnout_exhaustion_this_week,
+        "burnout_depersonalization_this_week": burnout_depersonalization_this_week,
+        "burnout_cognitive_regulation_this_week": burnout_cognitive_regulation_this_week,
+        "burnout_emotional_regulation_this_week": burnout_emotional_regulation_this_week,
         "stress_this_week": stress_this_week,
         "emotional_labor_this_week": emotional_labor_this_week,
         "burnout_primary_last_week": burnout_primary_last_week,
