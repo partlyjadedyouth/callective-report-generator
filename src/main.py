@@ -9,6 +9,7 @@ This script coordinates the process of:
 2. Saving the data as a CSV file
 3. Parsing the data to generate questionnaire results for multiple questionnaire types
 4. Analyzing the survey results and generating per-participant statistics across weeks
+5. Fetching app usage data from another Google Spreadsheet and saving it as a CSV
 """
 
 # Import required libraries
@@ -40,6 +41,12 @@ def main():
         type=str,
         required=True,  # Add argument for spreadsheet key
         help="Google Spreadsheet key/ID",
+    )
+    parser.add_argument(
+        "--app_usage_sheet_key",
+        type=str,
+        required=False,  # Add optional argument for app usage spreadsheet key
+        help="Google Spreadsheet key/ID for app usage data",
     )
     parser.add_argument(
         "--week",
@@ -106,7 +113,45 @@ def main():
         print("Failed to save data to CSV file. Exiting.")  # Print error message
         return 1  # Return error code
 
-    # Step 3: Prepare questionnaire paths dictionary
+    # Step 3: Fetch app usage data if specified
+    if args.app_usage_sheet_key:  # If app usage spreadsheet key is provided
+        # Define the app usage CSV output path
+        app_usage_csv_path = os.path.join(
+            csv_dir, f"app_usage_data_{week_suffix}.csv"
+        )  # Construct path for app usage CSV output file
+
+        print(
+            f"Fetching app usage data from Google Spreadsheet: {args.app_usage_sheet_key}"
+        )  # Print status message
+        app_usage_data = fetch_google_sheet(
+            args.app_usage_sheet_key, sheet_name
+        )  # Fetch app usage spreadsheet data
+
+        # Check if app usage data was successfully fetched
+        if not app_usage_data:  # If no app usage data was fetched
+            print(
+                "Failed to fetch app usage data from Google Spreadsheet. Continuing without app usage data."
+            )  # Print warning message
+        else:
+            # Save the fetched app usage data to a CSV file
+            print(
+                f"Saving app usage data to CSV: {app_usage_csv_path}"
+            )  # Print status message
+            app_usage_saved_path = save_to_csv(
+                app_usage_data, app_usage_csv_path
+            )  # Save app usage data to CSV file
+
+            # Check if app usage CSV was successfully saved
+            if not app_usage_saved_path:  # If saving failed
+                print(
+                    "Failed to save app usage data to CSV file. Continuing without app usage data."
+                )  # Print warning message
+            else:
+                print(
+                    f"App usage data saved successfully to {app_usage_saved_path}"
+                )  # Print success message
+
+    # Step 4: Prepare questionnaire paths dictionary
     questionnaire_paths = {  # Create dictionary of questionnaire paths
         "BAT_primary": bat_primary_path,  # BAT primary path
         "BAT_secondary": bat_secondary_path,  # BAT secondary path
@@ -114,7 +159,7 @@ def main():
         "stress": stress_path,  # Stress path
     }
 
-    # Step 4: Parse the CSV data to generate questionnaire results
+    # Step 5: Parse the CSV data to generate questionnaire results
     print("Parsing questionnaire results...")  # Print status message
     result_file = parse_bat_primary_results(  # Parse questionnaire results
         csv_path=saved_path,
@@ -128,7 +173,7 @@ def main():
         print("Failed to generate questionnaire results.")  # Print error message
         return 1  # Return error code
 
-    # Step 5: Analyze the survey results for each participant
+    # Step 6: Analyze the survey results for each participant
     print(
         "Analyzing survey results for each participant across all weeks..."
     )  # Print status message
@@ -145,7 +190,7 @@ def main():
             f"Process completed successfully. Results saved to {result_file} and participant analysis to {analysis_file}"
         )  # Print success message
 
-        # Step 6: Generate personal reports
+        # Step 7: Generate personal reports
         print("Generating personal reports...")  # Print status message
         try:
             # Define the path to the personal report generator script
@@ -179,6 +224,6 @@ if __name__ == "__main__":
     Execute the main function when the script is run directly.
 
     Example usage:
-    python src/main.py --sheet_key=asdf --week=0
+    python src/main.py --sheet_key=asdf --week=0 --app_usage_sheet_key=qwerty
     """
     exit(main())  # Run main function and use its return code as exit code
