@@ -11,12 +11,15 @@ This script coordinates the process of:
 4. Analyzing the survey results and generating per-participant statistics across weeks
 5. Fetching app usage data from another Google Spreadsheet and saving it as a CSV
 6. Analyzing app usage data and generating app_analysis.json
+7. Generating personal reports for all participants
+8. Generating team figures for visualization
 """
 
 # Import required libraries
 import argparse  # Library for parsing command-line arguments
 import os  # Library for operating system functionality
 import subprocess  # Library for running external processes
+import json  # Library for handling JSON data
 
 # Import custom modules
 from fetch_spreadsheet import (
@@ -30,6 +33,9 @@ from analyze_results import analyze_results  # Import function for analyzing res
 from analyze_app_usage import (
     analyze_app_usage,
 )  # Import function for analyzing app usage data
+from generate_team_figures import (
+    generate_bat_primary_distribution_graph,
+)  # Import function for generating team figures
 
 
 def main():
@@ -231,6 +237,49 @@ def main():
             ["python3", personal_report_script], check=True
         )  # Run the script using python3 and check for errors
         print(f"Successfully generated personal reports.")  # Print success message
+
+        # Step 9: Generate team figures
+        print("Generating team figures...")  # Print status message
+
+        # Load analysis data to determine teams
+        with open(analysis_file, "r", encoding="utf-8") as f:  # Open analysis file
+            analysis_data = json.load(f)  # Load JSON data
+
+        # Extract all unique team numbers
+        team_numbers = set()  # Initialize empty set for team numbers
+        for participant in analysis_data[
+            "participants"
+        ]:  # Iterate through each participant
+            team_name = participant["team"]  # Get team name
+            if team_name.startswith("상담 ") and team_name.endswith(
+                "팀"
+            ):  # Check if team name has expected format
+                try:
+                    # Extract team number from the team name (e.g., "상담 1팀" -> 1)
+                    team_number = int(team_name[3:-1])  # Extract and convert to integer
+                    team_numbers.add(team_number)  # Add to set of team numbers
+                except (
+                    ValueError
+                ):  # Handle case where team number isn't a valid integer
+                    pass  # Skip this team
+
+        # Generate figures for all teams
+        for team_number in sorted(
+            team_numbers
+        ):  # Iterate through team numbers in order
+            try:
+                print(
+                    f"Generating figures for team {team_number}..."
+                )  # Print progress message
+                generate_bat_primary_distribution_graph(
+                    args.week, team_number
+                )  # Generate figures for this team
+            except Exception as e:  # Catch any errors that occur
+                print(
+                    f"Error generating figures for team {team_number}: {e}"
+                )  # Print error message
+
+        print("Successfully generated team figures.")  # Print success message
         return 0  # Return success code
     except subprocess.CalledProcessError as e:  # Catch errors during script execution
         print(f"Failed to generate personal reports: {e}")  # Print error message

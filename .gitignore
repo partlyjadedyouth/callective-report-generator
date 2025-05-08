@@ -13,9 +13,11 @@ wheels/
 data/csv/*
 data/results/*
 data/analysis/*
+# reports
+data/reports/*
+# figures
+data/figures/*
 
 # codebase
 codebase.md
 
-# reports
-data/reports/*
