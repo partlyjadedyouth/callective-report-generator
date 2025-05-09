@@ -39,6 +39,7 @@ from generate_team_figures import (
     generate_cognitive_regulation_distribution_graph,
     generate_emotional_regulation_distribution_graph,
     generate_depersonalization_distribution_graph,
+    generate_stress_distribution_graph,
 )  # Import functions for generating team figures
 
 
@@ -295,6 +296,10 @@ def main():
                 generate_depersonalization_distribution_graph(
                     args.week, team_number
                 )  # Generate depersonalization figures for this team
+                # Generate stress distribution graph
+                generate_stress_distribution_graph(
+                    args.week, team_number
+                )  # Generate stress figures for this team
             except Exception as e:  # Catch any errors that occur
                 print(
                     f"Error generating figures for team {team_number}: {e}"
