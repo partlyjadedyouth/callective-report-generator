@@ -11,6 +11,15 @@ from pathlib import Path
 import matplotlib.font_manager as fm
 import matplotlib as mpl
 
+# 절단점 값을 가져오기 위한 임포트
+from cutoff_values import (
+    CUTOFF_BURNOUT_PRIMARY,
+    CUTOFF_BURNOUT_EXHAUSTION,
+    CUTOFF_BURNOUT_DEPERSONALIZATION,
+    CUTOFF_BURNOUT_COGNITIVE_REGULATION,
+    CUTOFF_BURNOUT_EMOTIONAL_REGULATION,
+)
+
 
 def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
     """
@@ -28,8 +37,8 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
     with open("data/analysis/analysis.json", "r", encoding="utf-8") as f:
         analysis_data = json.load(f)
 
-    # Set cutoff values for BAT_primary (from personal_report_generator.py)
-    cutoff_burnout_primary = [2.58, 3.01]
+    # 외부 모듈에서 가져온 절단점 사용
+    cutoff_burnout_primary = CUTOFF_BURNOUT_PRIMARY
 
     # Collect BAT_primary scores for the specified week
     all_scores = []  # List to store scores from all participants
@@ -171,8 +180,8 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
     with open("data/analysis/analysis.json", "r", encoding="utf-8") as f:
         analysis_data = json.load(f)
 
-    # Set cutoff values for exhaustion (from personal_report_generator.py)
-    cutoff_burnout_exhaustion = [3.05, 3.30]
+    # 외부 모듈에서 가져온 절단점 사용
+    cutoff_burnout_exhaustion = CUTOFF_BURNOUT_EXHAUSTION
 
     # Collect exhaustion scores for the specified week
     all_scores = []  # List to store scores from all participants
@@ -330,8 +339,8 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
     with open("data/analysis/analysis.json", "r", encoding="utf-8") as f:
         analysis_data = json.load(f)
 
-    # Set cutoff values for cognitive regulation (from personal_report_generator.py)
-    cutoff_burnout_cognitive_regulation = [2.69, 3.09]
+    # 외부 모듈에서 가져온 절단점 사용
+    cutoff_burnout_cognitive_regulation = CUTOFF_BURNOUT_COGNITIVE_REGULATION
 
     # Collect cognitive regulation scores for the specified week
     all_scores = []  # List to store scores from all participants
@@ -506,8 +515,8 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
     with open("data/analysis/analysis.json", "r", encoding="utf-8") as f:
         analysis_data = json.load(f)
 
-    # Set cutoff values for emotional regulation (from personal_report_generator.py)
-    cutoff_burnout_emotional_regulation = [2.09, 2.89]
+    # 외부 모듈에서 가져온 절단점 사용
+    cutoff_burnout_emotional_regulation = CUTOFF_BURNOUT_EMOTIONAL_REGULATION
 
     # Collect emotional regulation scores for the specified week
     all_scores = []  # List to store scores from all participants
@@ -682,8 +691,8 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
     with open("data/analysis/analysis.json", "r", encoding="utf-8") as f:
         analysis_data = json.load(f)
 
-    # Set cutoff values for depersonalization (from personal_report_generator.py)
-    cutoff_burnout_depersonalization = [2.49, 3.09]
+    # 외부 모듈에서 가져온 절단점 사용
+    cutoff_burnout_depersonalization = CUTOFF_BURNOUT_DEPERSONALIZATION
 
     # Collect depersonalization scores for the specified week
     all_scores = []  # List to store scores from all participants

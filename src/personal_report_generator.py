@@ -4,6 +4,25 @@ from playwright.sync_api import sync_playwright
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
+# 절단점 값을 가져오기 위한 임포트
+from cutoff_values import (
+    CUTOFF_BURNOUT_PRIMARY,
+    CUTOFF_BURNOUT_EXHAUSTION,
+    CUTOFF_BURNOUT_DEPERSONALIZATION,
+    CUTOFF_BURNOUT_COGNITIVE_REGULATION,
+    CUTOFF_BURNOUT_EMOTIONAL_REGULATION,
+    CUTOFF_BURNOUT_SECONDARY,
+    CUTOFF_STRESS,
+    CUTOFF_EMOTIONAL_LABOR,
+    CUTOFF_JOB_DEMAND,
+    CUTOFF_INSUFFICIENT_JOB_CONTROL,
+    CUTOFF_INTERPERSONAL_CONFLICT,
+    CUTOFF_JOB_INSECURITY,
+    CUTOFF_ORGANIZATIONAL_SYSTEM,
+    CUTOFF_LACK_OF_REWARD,
+    CUTOFF_OCCUPATIONAL_CLIMATE,
+)
+
 # 파일 저장 전 디렉토리 경로 확인 및 생성
 # os.makedirs()는 해당 경로의 모든 디렉토리를 생성함
 # exist_ok=True 옵션은 디렉토리가 이미 존재해도 오류를 발생시키지 않음
@@ -25,15 +44,15 @@ env = Environment(loader=FileSystemLoader("templates/"))
 # 템플릿 파일 로드
 template = env.get_template("personal_template.html")
 
-# 절단점
-cutoff_burnout_primary = [2.58, 3.01]
-cutoff_burnout_exhaustion = [3.05, 3.30]
-cutoff_burnout_depersonalization = [2.49, 3.09]
-cutoff_burnout_cognitive_regulation = [2.69, 3.09]
-cutoff_burnout_emotional_regulation = [2.09, 2.89]
-cutoff_burnout_secondary = [2.84, 3.34]
-cutoff_stress = [50.0, 55.6]
-cutoff_emotional_labor = [76.66, 72.21, 63.88, 49.99, 45.23]
+# cutoff_values.py에서 가져온 절단점을 변수에 할당
+cutoff_burnout_primary = CUTOFF_BURNOUT_PRIMARY
+cutoff_burnout_exhaustion = CUTOFF_BURNOUT_EXHAUSTION
+cutoff_burnout_depersonalization = CUTOFF_BURNOUT_DEPERSONALIZATION
+cutoff_burnout_cognitive_regulation = CUTOFF_BURNOUT_COGNITIVE_REGULATION
+cutoff_burnout_emotional_regulation = CUTOFF_BURNOUT_EMOTIONAL_REGULATION
+cutoff_burnout_secondary = CUTOFF_BURNOUT_SECONDARY
+cutoff_stress = CUTOFF_STRESS
+cutoff_emotional_labor = CUTOFF_EMOTIONAL_LABOR
 
 # 각 참여자에 대해 반복 수행
 participants = analysis_data["participants"]
