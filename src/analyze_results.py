@@ -36,7 +36,7 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
     os.makedirs(output_dir, exist_ok=True)
 
     # Dictionary to store all participants with their weekly analyses
-    # Structure: { "name": { "name": "", "team": "", "role": "", "analysis": { "0주차": {...}, "2주차": {...} } } }
+    # Structure: { "unique_id": { "name": "", "team": "", "role": "", "phone": "", "email": "", "analysis": { "0주차": {...}, "2주차": {...} } } }
     all_participants = {}
 
     # Get all JSON files in the results directory
@@ -69,16 +69,24 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
 
         # Process each participant's results for this week
         for participant in results:
-            name = participant.get("name", "Unknown")
-            team = participant.get("team", "Unknown")
-            role = participant.get("role", "Unknown")
+            name = participant.get("name", "Unknown")  # Get participant name
+            team = participant.get("team", "Unknown")  # Get participant team
+            role = participant.get("role", "Unknown")  # Get participant role
+            phone = participant.get("phone", "")  # Get participant phone
+            email = participant.get("email", "")  # Get participant email
+
+            # Create a unique identifier using name and team
+            # Since everyone has a name and team, and people with the same name are never in the same team
+            unique_id = f"{name}_{team}"  # Use name and team as unique ID
 
             # If this participant isn't in all_participants yet, add them
-            if name not in all_participants:
-                all_participants[name] = {
+            if unique_id not in all_participants:
+                all_participants[unique_id] = {
                     "name": name,
                     "team": team,
                     "role": role,
+                    "phone": phone,  # Store phone number
+                    "email": email,  # Store email address
                     "analysis": {},
                 }
 
@@ -209,10 +217,19 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
                         weekly_analysis["type_averages"][category][question_type] = None
 
             # Add this week's analysis to the participant's analysis
-            all_participants[name]["analysis"][file_name] = weekly_analysis
+            all_participants[unique_id]["analysis"][file_name] = weekly_analysis
 
-    # Convert the dictionary of participants to a list
-    participants_list = list(all_participants.values())
+    # Convert the dictionary of participants to a list, ensuring the output format matches what's expected
+    participants_list = []
+    for participant_data in all_participants.values():
+        # Create a clean version of the participant data without phone/email if not necessary for output
+        output_participant = {
+            "name": participant_data["name"],
+            "team": participant_data["team"],
+            "role": participant_data["role"],
+            "analysis": participant_data["analysis"],
+        }
+        participants_list.append(output_participant)
 
     # Generate team and overall analysis
     group_analysis = generate_group_analysis(all_participants)
@@ -256,7 +273,9 @@ def generate_group_analysis(all_participants):
 
         # Filter participants belonging to this group
         filtered_participants = {
-            name: data for name, data in all_participants.items() if filter_func(data)
+            participant_id: data
+            for participant_id, data in all_participants.items()
+            if filter_func(data)
         }
 
         if not filtered_participants:
