@@ -9,10 +9,10 @@ This script coordinates the process of:
 2. Saving the data as a CSV file
 3. Parsing the data to generate questionnaire results for multiple questionnaire types
 4. Analyzing the survey results and generating per-participant statistics across weeks
-5. Fetching app usage data from another Google Spreadsheet and saving it as a CSV
-6. Analyzing app usage data and generating app_analysis.json
-7. Generating personal reports for all participants
-8. Generating team figures for visualization
+5. Analyzing app usage data and generating app_analysis.json (using manually provided data)
+6. Generating personal reports for all participants
+7. Generating team figures for visualization
+8. Generating company-level summary figures
 """
 
 # Import required libraries
@@ -42,7 +42,10 @@ from generate_team_figures import (
     generate_stress_distribution_graph,
     generate_stress_subcategories_boxplot,
     generate_emotional_labor_subcategories_boxplot,
-)  # Import functions for generating team figures
+    generate_burnout_summary_table,
+    generate_stress_summary_table,
+    generate_emotional_labor_summary_table,
+)  # Import functions for generating team and company figures
 
 
 def main():
@@ -58,12 +61,6 @@ def main():
         type=str,
         required=True,  # Add argument for spreadsheet key
         help="Google Spreadsheet key/ID",
-    )
-    parser.add_argument(
-        "--app_usage_sheet_key",
-        type=str,
-        required=False,  # Add optional argument for app usage spreadsheet key
-        help="Google Spreadsheet key/ID for app usage data",
     )
     parser.add_argument(
         "--week",
@@ -130,46 +127,7 @@ def main():
         print("Failed to save data to CSV file. Exiting.")  # Print error message
         return 1  # Return error code
 
-    # Step 3: Fetch app usage data if specified
-    app_usage_saved_path = None  # Initialize app usage saved path
-    if args.app_usage_sheet_key:  # If app usage spreadsheet key is provided
-        # Define the app usage CSV output path
-        app_usage_csv_path = os.path.join(
-            csv_dir, f"app_usage_data_{week_suffix}.csv"
-        )  # Construct path for app usage CSV output file
-
-        print(
-            f"Fetching app usage data from Google Spreadsheet: {args.app_usage_sheet_key}"
-        )  # Print status message
-        app_usage_data = fetch_google_sheet(
-            args.app_usage_sheet_key, sheet_name
-        )  # Fetch app usage spreadsheet data
-
-        # Check if app usage data was successfully fetched
-        if not app_usage_data:  # If no app usage data was fetched
-            print(
-                "Failed to fetch app usage data from Google Spreadsheet. Continuing without app usage data."
-            )  # Print warning message
-        else:
-            # Save the fetched app usage data to a CSV file
-            print(
-                f"Saving app usage data to CSV: {app_usage_csv_path}"
-            )  # Print status message
-            app_usage_saved_path = save_to_csv(
-                app_usage_data, app_usage_csv_path
-            )  # Save app usage data to CSV file
-
-            # Check if app usage CSV was successfully saved
-            if not app_usage_saved_path:  # If saving failed
-                print(
-                    "Failed to save app usage data to CSV file. Continuing without app usage data."
-                )  # Print warning message
-            else:
-                print(
-                    f"App usage data saved successfully to {app_usage_saved_path}"
-                )  # Print success message
-
-    # Step 4: Prepare questionnaire paths dictionary
+    # Step 3: Prepare questionnaire paths dictionary
     questionnaire_paths = {  # Create dictionary of questionnaire paths
         "BAT_primary": bat_primary_path,  # BAT primary path
         "BAT_secondary": bat_secondary_path,  # BAT secondary path
@@ -177,7 +135,7 @@ def main():
         "stress": stress_path,  # Stress path
     }
 
-    # Step 5: Parse the CSV data to generate questionnaire results
+    # Step 4: Parse the CSV data to generate questionnaire results
     print("Parsing questionnaire results...")  # Print status message
     result_file = parse_bat_primary_results(  # Parse questionnaire results
         csv_path=saved_path,
@@ -191,7 +149,7 @@ def main():
         print("Failed to generate questionnaire results.")  # Print error message
         return 1  # Return error code
 
-    # Step 6: Analyze the survey results for each participant
+    # Step 5: Analyze the survey results for each participant
     print(
         "Analyzing survey results for each participant across all weeks..."
     )  # Print status message
@@ -208,23 +166,23 @@ def main():
         f"Participant analysis results saved to {analysis_file}"
     )  # Print success message
 
-    # Step 7: Analyze app usage data if available
-    app_analysis_file = None  # Initialize app analysis file path
-    if app_usage_saved_path:  # If app usage data was saved
-        print("Analyzing app usage data...")  # Print status message
-        app_analysis_file = analyze_app_usage(  # Analyze app usage data
-            csv_dir=csv_dir, output_dir=analysis_dir
-        )
+    # Step 6: Analyze app usage data if available (now using manually provided data)
+    print(
+        "Analyzing app usage data (from manually provided files)..."
+    )  # Print status message
+    app_analysis_file = analyze_app_usage(  # Analyze app usage data
+        csv_dir=csv_dir, output_dir=analysis_dir
+    )
 
-        # Check if app usage analysis was successfully generated
-        if not app_analysis_file:  # If app usage analysis failed
-            print(
-                "Failed to analyze app usage data. Continuing without app usage analysis."
-            )  # Print warning message
-        else:
-            print(
-                f"App usage analysis results saved to {app_analysis_file}"
-            )  # Print success message
+    # Check if app usage analysis was successfully generated
+    if not app_analysis_file:  # If app usage analysis failed
+        print(
+            "Failed to analyze app usage data. Continuing without app usage analysis."
+        )  # Print warning message
+    else:
+        print(
+            f"App usage analysis results saved to {app_analysis_file}"
+        )  # Print success message
 
     # Print success message for the whole process
     success_message = f"Process completed successfully. Results saved to {result_file} and participant analysis to {analysis_file}"
@@ -232,7 +190,7 @@ def main():
         success_message += f", app usage analysis to {app_analysis_file}"
     print(success_message)  # Print success message
 
-    # Step 8: Generate personal reports
+    # Step 7: Generate personal reports
     print("Generating personal reports...")  # Print status message
     try:
         # Define the path to the personal report generator script
@@ -245,7 +203,7 @@ def main():
         )  # Run the script using python3 and check for errors
         print(f"Successfully generated personal reports.")  # Print success message
 
-        # Step 9: Generate team figures
+        # Step 8: Generate team figures
         print("Generating team figures...")  # Print status message
 
         # Load analysis data to determine teams
@@ -315,7 +273,33 @@ def main():
                     f"Error generating figures for team {team_number}: {e}"
                 )  # Print error message
 
-        print("Successfully generated team figures.")  # Print success message
+        # Step 9: Generate company-level summary figures
+        print("Generating company-level summary figures...")  # Print status message
+        try:
+            # Generate burnout summary table
+            generate_burnout_summary_table(
+                args.week
+            )  # Generate company-level burnout summary
+
+            # Generate stress summary table
+            generate_stress_summary_table(
+                args.week
+            )  # Generate company-level stress summary
+
+            # Generate emotional labor summary table
+            generate_emotional_labor_summary_table(
+                args.week
+            )  # Generate company-level emotional labor summary
+
+            print(
+                "Successfully generated company-level summary figures."
+            )  # Print success message
+        except Exception as e:  # Catch any errors that occur
+            print(
+                f"Error generating company-level summary figures: {e}"
+            )  # Print error message
+
+        print("Successfully generated all figures.")  # Print success message
         return 0  # Return success code
     except subprocess.CalledProcessError as e:  # Catch errors during script execution
         print(f"Failed to generate personal reports: {e}")  # Print error message
@@ -332,6 +316,6 @@ if __name__ == "__main__":
     Execute the main function when the script is run directly.
 
     Example usage:
-    python src/main.py --sheet_key=asdf --week=0 --app_usage_sheet_key=qwerty
+    python src/main.py --sheet_key=asdf --week=0
     """
     exit(main())  # Run main function and use its return code as exit code
