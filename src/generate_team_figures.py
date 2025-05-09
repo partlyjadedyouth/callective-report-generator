@@ -167,10 +167,14 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
     # Adjust layout
     plt.tight_layout()
     # Save the figure with high resolution (300 DPI)
-    plt.savefig(f"{output_dir}/bat_primary_week{week_number}.png", dpi=300)
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_번아웃_상담 {team_number}팀.png", dpi=300
+    )
     plt.close()
 
-    print(f"Graph saved to {output_dir}/bat_primary_week{week_number}.png")
+    print(
+        f"Graph saved to {output_dir}/{week_number}주차_번아웃_상담 {team_number}팀.png"
+    )
 
 
 def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
@@ -326,10 +330,14 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
     # Adjust layout
     plt.tight_layout()
     # Save the figure with high resolution (300 DPI)
-    plt.savefig(f"{output_dir}/exhaustion_week{week_number}.png", dpi=300)
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_탈진_상담 {team_number}팀.png", dpi=300
+    )
     plt.close()
 
-    print(f"Graph saved to {output_dir}/exhaustion_week{week_number}.png")
+    print(
+        f"Graph saved to {output_dir}/{week_number}주차_탈진_상담 {team_number}팀.png"
+    )
 
 
 def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=None):
@@ -502,10 +510,14 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
     # Adjust layout
     plt.tight_layout()
     # Save the figure with high resolution (300 DPI)
-    plt.savefig(f"{output_dir}/cognitive_regulation_week{week_number}.png", dpi=300)
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_인지적조절_상담 {team_number}팀.png", dpi=300
+    )
     plt.close()
 
-    print(f"Graph saved to {output_dir}/cognitive_regulation_week{week_number}.png")
+    print(
+        f"Graph saved to {output_dir}/{week_number}주차_인지적조절_상담 {team_number}팀.png"
+    )
 
 
 def generate_emotional_regulation_distribution_graph(week_number=0, team_number=None):
@@ -678,10 +690,14 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
     # Adjust layout
     plt.tight_layout()
     # Save the figure with high resolution (300 DPI)
-    plt.savefig(f"{output_dir}/emotional_regulation_week{week_number}.png", dpi=300)
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_정서적조절_상담 {team_number}팀.png", dpi=300
+    )
     plt.close()
 
-    print(f"Graph saved to {output_dir}/emotional_regulation_week{week_number}.png")
+    print(
+        f"Graph saved to {output_dir}/{week_number}주차_정서적조절_상담 {team_number}팀.png"
+    )
 
 
 def generate_depersonalization_distribution_graph(week_number=0, team_number=None):
@@ -844,10 +860,14 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
     # Adjust layout
     plt.tight_layout()
     # Save the figure with high resolution (300 DPI)
-    plt.savefig(f"{output_dir}/depersonalization_week{week_number}.png", dpi=300)
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_심적거리_상담 {team_number}팀.png", dpi=300
+    )
     plt.close()
 
-    print(f"Graph saved to {output_dir}/depersonalization_week{week_number}.png")
+    print(
+        f"Graph saved to {output_dir}/{week_number}주차_심적거리_상담 {team_number}팀.png"
+    )
 
 
 def generate_stress_distribution_graph(week_number=0, team_number=None):
@@ -988,10 +1008,14 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
     # Adjust layout
     plt.tight_layout()
     # Save the figure with high resolution (300 DPI)
-    plt.savefig(f"{output_dir}/stress_week{week_number}.png", dpi=300)
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_스트레스_상담 {team_number}팀.png", dpi=300
+    )
     plt.close()
 
-    print(f"Graph saved to {output_dir}/stress_week{week_number}.png")
+    print(
+        f"Graph saved to {output_dir}/{week_number}주차_스트레스_상담 {team_number}팀.png"
+    )
 
 
 def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
@@ -1143,11 +1167,13 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
     plt.tight_layout()
 
     # Save the figure
-    plt.savefig(f"{output_dir}/stress_subcategories_week{week_number}.png", dpi=300)
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_스트레스요인_상담 {team_number}팀.png", dpi=300
+    )
     plt.close()
 
     print(
-        f"Stress subcategories box plot saved to {output_dir}/stress_subcategories_week{week_number}.png"
+        f"Stress subcategories box plot saved to {output_dir}/{week_number}주차_스트레스요인_상담 {team_number}팀.png"
     )
 
 
@@ -1291,12 +1317,12 @@ def generate_emotional_labor_subcategories_boxplot(week_number=0, team_number=No
 
     # Save the figure
     plt.savefig(
-        f"{output_dir}/emotional_labor_subcategories_week{week_number}.png", dpi=300
+        f"{output_dir}/{week_number}주차_감정노동정도_상담 {team_number}팀.png", dpi=300
     )
     plt.close()
 
     print(
-        f"Emotional labor subcategories box plot saved to {output_dir}/emotional_labor_subcategories_week{week_number}.png"
+        f"Emotional labor subcategories box plot saved to {output_dir}/{week_number}주차_감정노동정도_상담 {team_number}팀.png"
     )
 
 
