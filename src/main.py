@@ -41,6 +41,7 @@ from generate_team_figures import (
     generate_depersonalization_distribution_graph,
     generate_stress_distribution_graph,
     generate_stress_subcategories_boxplot,
+    generate_emotional_labor_subcategories_boxplot,
 )  # Import functions for generating team figures
 
 
@@ -305,6 +306,10 @@ def main():
                 generate_stress_subcategories_boxplot(
                     args.week, team_number
                 )  # Generate stress subcategories boxplot for this team
+                # Generate emotional labor subcategories boxplot
+                generate_emotional_labor_subcategories_boxplot(
+                    args.week, team_number
+                )  # Generate emotional labor subcategories boxplot for this team
             except Exception as e:  # Catch any errors that occur
                 print(
                     f"Error generating figures for team {team_number}: {e}"
