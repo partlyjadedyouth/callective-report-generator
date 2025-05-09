@@ -32,7 +32,7 @@ cutoff_burnout_depersonalization = [2.49, 3.09]
 cutoff_burnout_cognitive_regulation = [2.69, 3.09]
 cutoff_burnout_emotional_regulation = [2.09, 2.89]
 cutoff_burnout_secondary = [2.84, 3.34]
-cutoff_stress = [44.4, 50.0, 55.6]
+cutoff_stress = [50.0, 55.6]
 cutoff_emotional_labor = [76.66, 72.21, 63.88, 49.99, 45.23]
 
 # 각 참여자에 대해 반복 수행

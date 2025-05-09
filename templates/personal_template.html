@@ -352,14 +352,11 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                 <!-- 정상 구간 -->
                 <div class="absolute h-2 bg-green-400 top-1/2 -translate-y-1/2" style="width: {{ cutoff_stress[0] }}%; left: 0%;"></div>
 
-                <!-- 주의 구간 -->
-                <div class="absolute h-2 bg-yellow-400 top-1/2 -translate-y-1/2" style="width: {{ cutoff_stress[1] - cutoff_stress[0] }}%; left: {{ cutoff_stress[0] }}%;"></div>
-
                 <!-- 위험 구간 -->
-                <div class="absolute h-2 bg-orange-400 top-1/2 -translate-y-1/2" style="width: {{ cutoff_stress[2] - cutoff_stress[1] }}%; left: {{ cutoff_stress[1] }}%;"></div>
+                <div class="absolute h-2 bg-orange-400 top-1/2 -translate-y-1/2" style="width: {{ cutoff_stress[1] - cutoff_stress[0] }}%; left: {{ cutoff_stress[0] }}%;"></div>
 
                 <!-- 고위험 구간 -->
-                <div class="absolute h-2 bg-red-400 top-1/2 -translate-y-1/2" style="width: {{ 100 - cutoff_stress[2] }}%; left: {{ cutoff_stress[2] }}%;"></div>
+                <div class="absolute h-2 bg-red-400 top-1/2 -translate-y-1/2" style="width: {{ 100 - cutoff_stress[1] }}%; left: {{ cutoff_stress[1] }}%;"></div>
 
                 <!-- 경계선 마커 -->
                 <div class="absolute w-0.5 h-5 bg-gray-600 top-1/2 -translate-y-1/2" style="left: 0%;"></div>
@@ -388,14 +385,11 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                 <div class="flex justify-between mb-3">
                   <div class="font-medium">점수</div>
                   {% set score_color_class_stress_this = 'text-green-600' if stress_this_week <=
-            cutoff_stress[0] else 'text-yellow-600' if stress_this_week <=cutoff_stress[1]
-            else 'text-orange-600' if stress_this_week <=cutoff_stress[2] else 'text-red-600' %}
+            cutoff_stress[0] else 'text-orange-600' if stress_this_week <=cutoff_stress[1]
+            else 'text-red-600' %}
                   {% set score_status_stress_this = '정상' if stress_this_week <= cutoff_stress[0] else 
-                    '주의' if
-                  stress_this_week <= cutoff_stress[1] else 
-                    '위험' if stress_this_week <= cutoff_stress[2]
-                  else 
-                    '고위험' %}
+                    '위험' if stress_this_week <= cutoff_stress[1] else 
+                      '고위험' %}
                   <div class="font-medium {{ score_color_class_stress_this }}">{{
             stress_this_week }}
                     ({{ score_status_stress_this }})
@@ -419,14 +413,12 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                 <div class="flex justify-between mb-3">
                   <div class="font-medium">회사 평균</div>
                   {% set company_score_color_class_stress = 'text-green-600' if company_stress_this_week <=
-        cutoff_stress[0] else 'text-yellow-600' if company_stress_this_week <=cutoff_stress[1]
-        else 'text-orange-600' if company_stress_this_week <=cutoff_stress[2] else 'text-red-600' %}
+        cutoff_stress[0] else 'text-orange-600' if company_stress_this_week <=cutoff_stress[1]
+        else 'text-red-600' %}
                   {% set company_score_status_stress = '정상' if company_stress_this_week <= cutoff_stress[0]
                   else 
-                    '주의' if company_stress_this_week <= cutoff_stress[1] else 
-                      '위험' if
-                company_stress_this_week <= cutoff_stress[2] else 
-                    '고위험' %}
+                    '위험' if company_stress_this_week <= cutoff_stress[1] else 
+                      '고위험' %}
                   <div class="font-medium {{ company_score_color_class_stress }}">{{ company_stress_this_week }}
                     ({{ company_score_status_stress }})
                   </div>
@@ -479,8 +471,7 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                         .analysis[config.week_num ~ "주차"]
                         .category_averages[config.score_key] %}
                       {% set bar_color_class_stress_weekly = 'bg-green-400' if current_score <= config.cutoff[0]
-    else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-orange-400' if current_score
-    <=config.cutoff[2] else 'bg-red-400' %}
+    else 'bg-orange-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                       <div class="flex flex-col items-center w-full">
                         <div class="w-full rounded-lg {{ bar_color_class_stress_weekly }} h-5 mb-1">&nbsp;</div>
                         <div class="text-xs">{{ config.label }}</div>

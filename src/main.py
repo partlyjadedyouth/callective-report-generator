@@ -35,7 +35,11 @@ from analyze_app_usage import (
 )  # Import function for analyzing app usage data
 from generate_team_figures import (
     generate_bat_primary_distribution_graph,
-)  # Import function for generating team figures
+    generate_exhaustion_distribution_graph,
+    generate_cognitive_regulation_distribution_graph,
+    generate_emotional_regulation_distribution_graph,
+    generate_depersonalization_distribution_graph,
+)  # Import functions for generating team figures
 
 
 def main():
@@ -271,9 +275,26 @@ def main():
                 print(
                     f"Generating figures for team {team_number}..."
                 )  # Print progress message
+                # Generate BAT primary distribution graph
                 generate_bat_primary_distribution_graph(
                     args.week, team_number
-                )  # Generate figures for this team
+                )  # Generate BAT primary figures for this team
+                # Generate exhaustion distribution graph
+                generate_exhaustion_distribution_graph(
+                    args.week, team_number
+                )  # Generate exhaustion figures for this team
+                # Generate cognitive regulation distribution graph
+                generate_cognitive_regulation_distribution_graph(
+                    args.week, team_number
+                )  # Generate cognitive regulation figures for this team
+                # Generate emotional regulation distribution graph
+                generate_emotional_regulation_distribution_graph(
+                    args.week, team_number
+                )  # Generate emotional regulation figures for this team
+                # Generate depersonalization distribution graph
+                generate_depersonalization_distribution_graph(
+                    args.week, team_number
+                )  # Generate depersonalization figures for this team
             except Exception as e:  # Catch any errors that occur
                 print(
                     f"Error generating figures for team {team_number}: {e}"
