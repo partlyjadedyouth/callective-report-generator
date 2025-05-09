@@ -498,10 +498,12 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                 <span class="text-xs font-medium">본인</span>
               </div>
 
-              <div class="flex items-center">
-                <div class="w-4 h-1 bg-blue-400 mr-2"></div>
-                <span class="text-xs font-medium">지난 설문</span>
-              </div>
+              {% if week > 0 %}
+                <div class="flex items-center">
+                  <div class="w-4 h-1 bg-blue-400 mr-2"></div>
+                  <span class="text-xs font-medium">지난 설문</span>
+                </div>
+              {% endif %}
 
               <div class="flex items-center">
                 <div class="w-4 h-1 bg-yellow-400 mr-2"></div>
@@ -539,8 +541,8 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
               <div class="flex flex-col items-center">
                 <div class="flex justify-center w-full h-52">
                   <div class="relative h-full w-16 bg-gray-200 mx-auto rounded">
-                    <!-- Participant's score bar (Green) -->
-                    <div class="absolute bottom-0 w-full bg-green-500 rounded-b" style="height: {{ emotional_labor_this_week[category_data.key] }}%;"></div>
+                    <!-- Participant's score bar (Gray) -->
+                    <div class="absolute bottom-0 w-full bg-gray-500 rounded-b" style="height: {{ emotional_labor_this_week[category_data.key] }}%;"></div>
 
                     <!-- Company Average Line (Yellow) -->
                     <div class="absolute left-0 w-full h-1 bg-yellow-400" style="bottom: {{ company_emotional_labor_this_week[category_data.key] }}%; transform: translateY(50%);"></div>

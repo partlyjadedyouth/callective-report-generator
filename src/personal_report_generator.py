@@ -171,7 +171,7 @@ for participant in participants:
     html = template.render(context)
 
     # HTML 파일 저장 경로
-    html_path = Path(f"data/reports/html/{name}_{team}_{week}주차.html").resolve()
+    html_path = Path(f"data/reports/html/{team}_{name}_{week}주차.html").resolve()
 
     with open(html_path, "w", encoding="utf-8") as file:
         # 파일 쓰기 작업 계속 진행
@@ -190,7 +190,7 @@ for participant in participants:
         )  # Wait until the network is idle, allowing Tailwind CSS to process and apply styles # Wait until the network is idle, allowing Tailwind CSS to process and apply styles
         # page.pdf(path=f"data/reports/pdf/{name}_{week}주차.pdf", format="A4") # Generate PDF # Generate PDF
         page.pdf(
-            path=f"data/reports/pdf/{name}_{team}_{week}주차.pdf",
+            path=f"data/reports/pdf/{team}_{name}_{week}주차.pdf",
             format="A4",
             print_background=True,
         )  # Generate PDF, ensuring background graphics (like colors) are printed
