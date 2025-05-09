@@ -120,6 +120,15 @@ for participant in participants:
         else []
     )
 
+    # 지난 주의 정서적 조절 점수 추출
+    burnout_emotional_regulation_last_week = (
+        participant["analysis"][f"{week - 2}주차"]["type_averages"]["BAT_primary"].get(
+            "정서적 조절", 0
+        )
+        if week > 0
+        else 0
+    )
+
     # 금주의 회사 평균 심리검사 점수
     company_burnout_primary_this_week = analysis_data["groups"]["회사"]["analysis"][
         f"{week}주차"
@@ -133,6 +142,11 @@ for participant in participants:
     company_emotional_labor_this_week = analysis_data["groups"]["회사"]["analysis"][
         f"{week}주차"
     ]["type_averages"]["emotional_labor"]
+
+    # 회사 평균 정서적 조절 점수 추출
+    company_burnout_emotional_regulation_this_week = analysis_data["groups"]["회사"][
+        "analysis"
+    ][f"{week}주차"]["type_averages"]["BAT_primary"].get("정서적 조절", 0)
 
     # 템플릿에 전달할 컨텍스트 데이터 준비
     context = {
@@ -160,8 +174,10 @@ for participant in participants:
         "burnout_secondary_last_week": burnout_secondary_last_week,
         "stress_last_week": stress_last_week,
         "emotional_labor_last_week": emotional_labor_last_week,
+        "burnout_emotional_regulation_last_week": burnout_emotional_regulation_last_week,
         "company_burnout_primary_this_week": company_burnout_primary_this_week,
         "company_burnout_secondary_this_week": company_burnout_secondary_this_week,
+        "company_burnout_emotional_regulation_this_week": company_burnout_emotional_regulation_this_week,
         "company_stress_this_week": company_stress_this_week,
         "company_emotional_labor_this_week": company_emotional_labor_this_week,
         "participant": participant,

@@ -178,8 +178,8 @@
 
         <!-- 번아웃 2차적 증상 -->
         <div class="flex flex-col items-start w-full px-5">
-          <h3 class="text-2xl font-semibold">번아웃 2차적 증상</h3>
-          <h4>심리적 호소, 신체적 호소</h4>
+          <h3 class="text-2xl font-semibold">정서적 조절</h3>
+          <h4>정서 조절의 어려움</h4>
           <hr class="w-full border-t border-black my-2">
 
           <!-- 차트 분석 -->
@@ -192,13 +192,13 @@
                 <div class="absolute w-full h-2 bg-gray-200 top-1/2 -translate-y-1/2"></div>
 
                 <!-- 정상 구간 -->
-                <div class="absolute h-2 bg-green-400 top-1/2 -translate-y-1/2" style="width: {{ (cutoff_burnout_secondary[0] - 1) * 25 }}%; left: 0%;"></div>
+                <div class="absolute h-2 bg-green-400 top-1/2 -translate-y-1/2" style="width: {{ (cutoff_burnout_emotional_regulation[0] - 1) * 25 }}%; left: 0%;"></div>
 
                 <!-- 위험 구간 -->
-                <div class="absolute h-2 bg-yellow-400 top-1/2 -translate-y-1/2" style="width: {{ (cutoff_burnout_secondary[1] - cutoff_burnout_secondary[0]) * 25 }}%; left: {{ (cutoff_burnout_secondary[0] - 1) * 25 }}%;"></div>
+                <div class="absolute h-2 bg-yellow-400 top-1/2 -translate-y-1/2" style="width: {{ (cutoff_burnout_emotional_regulation[1] - cutoff_burnout_emotional_regulation[0]) * 25 }}%; left: {{ (cutoff_burnout_emotional_regulation[0] - 1) * 25 }}%;"></div>
 
                 <!-- 고위험 구간 -->
-                <div class="absolute h-2 bg-red-400 top-1/2 -translate-y-1/2" style="width: {{ (5 - cutoff_burnout_secondary[1]) * 25 }}%; left: {{ (cutoff_burnout_secondary[1] - 1) * 25 }}%;"></div>
+                <div class="absolute h-2 bg-red-400 top-1/2 -translate-y-1/2" style="width: {{ (5 - cutoff_burnout_emotional_regulation[1]) * 25 }}%; left: {{ (cutoff_burnout_emotional_regulation[1] - 1) * 25 }}%;"></div>
 
                 <!-- 경계선 마커 -->
                 <div class="absolute w-0.5 h-5 bg-gray-600 top-1/2 -translate-y-1/2" style="left: 0%;"></div>
@@ -208,7 +208,7 @@
                 <div class="absolute w-0.5 h-5 bg-gray-600 top-1/2 -translate-y-1/2" style="left: 100%;"></div>
 
                 <!-- 현재 위치 표시 - 점 -->
-                <div class="absolute w-3 h-3 bg-gray-600 rounded-full top-1/2 -translate-y-1/2" style="left: {{ (burnout_secondary_this_week - 1) * 25 }}%; transform: translateX(-50%);"></div>
+                <div class="absolute w-3 h-3 bg-gray-600 rounded-full top-1/2 -translate-y-1/2" style="left: {{ (burnout_emotional_regulation_this_week - 1) * 25 }}%; transform: translateX(-50%);"></div>
               </div>
 
               <!-- 척도 숫자 -->
@@ -226,17 +226,17 @@
                 <!-- 첫번째 행 -->
                 <div class="flex justify-between mb-3">
                   <div class="font-medium">점수</div>
-                  {% set score_color_class_bs_this = 'text-green-600' if burnout_secondary_this_week <=
-        cutoff_burnout_secondary[0] else 'text-yellow-600' if burnout_secondary_this_week
-        <=cutoff_burnout_secondary[1] else 'text-red-600' %}
+                  {% set score_color_class_bs_this = 'text-green-600' if burnout_emotional_regulation_this_week <=
+cutoff_burnout_emotional_regulation[0] else 'text-yellow-600' if burnout_emotional_regulation_this_week
+<=cutoff_burnout_emotional_regulation[1] else 'text-red-600' %}
                   {% set score_status_bs_this = '정상' if
-                  burnout_secondary_this_week <= cutoff_burnout_secondary[0] else 
+                  burnout_emotional_regulation_this_week <= cutoff_burnout_emotional_regulation[0] else 
                     '위험' if
-                  burnout_secondary_this_week <= cutoff_burnout_secondary[1] else 
+                  burnout_emotional_regulation_this_week <= cutoff_burnout_emotional_regulation[1] else 
                     '고위험' %}
-                  <div class="font-medium {{ score_color_class_bs_this }}">{{ burnout_secondary_this_week }}
+                  <div class="font-medium {{ score_color_class_bs_this }}">{{ burnout_emotional_regulation_this_week }}
                     ({{
-        score_status_bs_this }})
+score_status_bs_this }})
                   </div>
                 </div>
                 <hr class="w-full border-t border-gray-300 mb-3">
@@ -245,11 +245,11 @@
                 {% if week > 0 %}
                   <div class="flex justify-between mb-3">
                     <div class="font-medium">지난 설문 대비</div>
-                    {% set diff_color_class_bs = 'text-red-600' if burnout_secondary_this_week >
-burnout_secondary_last_week else 'text-green-600' %}
+                    {% set diff_color_class_bs = 'text-red-600' if burnout_emotional_regulation_this_week >
+burnout_emotional_regulation_last_week else 'text-green-600' %}
                     <div class="font-medium {{ diff_color_class_bs }}">
-                      {% if burnout_secondary_this_week > burnout_secondary_last_week %}+{% endif %}{{ (burnout_secondary_this_week -
-    burnout_secondary_last_week) | round(2) }}</div>
+                      {% if burnout_emotional_regulation_this_week > burnout_emotional_regulation_last_week %}+{% endif %}{{ (burnout_emotional_regulation_this_week -
+burnout_emotional_regulation_last_week) | round(2) }}</div>
                   </div>
                   <hr class="w-full border-t border-gray-300 mb-3">
                 {% endif %}
@@ -257,15 +257,15 @@ burnout_secondary_last_week else 'text-green-600' %}
                 <!-- 세번째 행 -->
                 <div class="flex justify-between mb-3">
                   <div class="font-medium">회사 평균</div>
-                  {% set company_score_color_class_bs = 'text-green-600' if company_burnout_secondary_this_week <=
-    cutoff_burnout_secondary[0] else 'text-yellow-600' if company_burnout_secondary_this_week
-    <=cutoff_burnout_secondary[1] else 'text-red-600' %}
+                  {% set company_score_color_class_bs = 'text-green-600' if company_burnout_emotional_regulation_this_week <=
+cutoff_burnout_emotional_regulation[0] else 'text-yellow-600' if company_burnout_emotional_regulation_this_week
+<=cutoff_burnout_emotional_regulation[1] else 'text-red-600' %}
                   {% set company_score_status_bs = '정상' if
-                  company_burnout_secondary_this_week <= cutoff_burnout_secondary[0] else 
+                  company_burnout_emotional_regulation_this_week <= cutoff_burnout_emotional_regulation[0] else 
                     '위험' if
-                  company_burnout_secondary_this_week <= cutoff_burnout_secondary[1] else 
+                  company_burnout_emotional_regulation_this_week <= cutoff_burnout_emotional_regulation[1] else 
                     '고위험' %}
-                  <div class="font-medium {{ company_score_color_class_bs }}">{{ company_burnout_secondary_this_week }}
+                  <div class="font-medium {{ company_score_color_class_bs }}">{{ company_burnout_emotional_regulation_this_week }}
                     ({{ company_score_status_bs }})
                   </div>
                 </div>
@@ -277,45 +277,47 @@ burnout_secondary_last_week else 'text-green-600' %}
                     {
                       'week_num': 0,
                       'label': '0주차',
-                      'score_key': 'BAT_secondary',
-                      'cutoff': cutoff_burnout_secondary
+                      'score_key': 'BAT_primary.정서적 조절',
+                      'cutoff': cutoff_burnout_emotional_regulation
                     }, {
                       'week_num': 2,
                       'label': '2주차',
-                      'score_key': 'BAT_secondary',
-                      'cutoff': cutoff_burnout_secondary
+                      'score_key': 'BAT_primary.정서적 조절',
+                      'cutoff': cutoff_burnout_emotional_regulation
                     }, {
                       'week_num': 4,
                       'label': '4주차',
-                      'score_key': 'BAT_secondary',
-                      'cutoff': cutoff_burnout_secondary
+                      'score_key': 'BAT_primary.정서적 조절',
+                      'cutoff': cutoff_burnout_emotional_regulation
                     }, {
                       'week_num': 6,
                       'label': '6주차',
-                      'score_key': 'BAT_secondary',
-                      'cutoff': cutoff_burnout_secondary
+                      'score_key': 'BAT_primary.정서적 조절',
+                      'cutoff': cutoff_burnout_emotional_regulation
                     }, {
                       'week_num': 8,
                       'label': '8주차',
-                      'score_key': 'BAT_secondary',
-                      'cutoff': cutoff_burnout_secondary
+                      'score_key': 'BAT_primary.정서적 조절',
+                      'cutoff': cutoff_burnout_emotional_regulation
                     }, {
                       'week_num': 10,
                       'label': '10주차',
-                      'score_key': 'BAT_secondary',
-                      'cutoff': cutoff_burnout_secondary
+                      'score_key': 'BAT_primary.정서적 조절',
+                      'cutoff': cutoff_burnout_emotional_regulation
                     }, {
                       'week_num': 12,
                       'label': '12주차',
-                      'score_key': 'BAT_secondary',
-                      'cutoff': cutoff_burnout_secondary
+                      'score_key': 'BAT_primary.정서적 조절',
+                      'cutoff': cutoff_burnout_emotional_regulation
                     }
                   ] %}
                   {% for config in weekly_display_configs_secondary %}
                     {% if week >= config.week_num %}
                       {% set current_score = participant
                         .analysis[config.week_num ~ "주차"]
-                        .category_averages[config.score_key] %}
+                        .type_averages
+                        .BAT_primary
+                        .get("정서적 조절", 0) %}
                       {% set bar_color_class_bs_weekly = 'bg-green-400' if current_score <= config.cutoff[0]
 else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                       <div class="flex flex-col items-center w-full">
