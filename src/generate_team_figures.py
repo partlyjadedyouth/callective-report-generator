@@ -19,6 +19,13 @@ from cutoff_values import (
     CUTOFF_BURNOUT_COGNITIVE_REGULATION,
     CUTOFF_BURNOUT_EMOTIONAL_REGULATION,
     CUTOFF_STRESS,
+    CUTOFF_JOB_DEMAND,
+    CUTOFF_INSUFFICIENT_JOB_CONTROL,
+    CUTOFF_INTERPERSONAL_CONFLICT,
+    CUTOFF_JOB_INSECURITY,
+    CUTOFF_ORGANIZATIONAL_SYSTEM,
+    CUTOFF_LACK_OF_REWARD,
+    CUTOFF_OCCUPATIONAL_CLIMATE,
 )
 
 
@@ -986,6 +993,163 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
     print(f"Graph saved to {output_dir}/stress_week{week_number}.png")
 
 
+def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
+    """
+    Generate horizontal box plots for stress subcategories for a specific team
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+    - team_number (int or None): Team number to highlight (1, 2, 3, etc.)
+    """
+
+    # Create figures directory if it doesn't exist
+    output_dir = f"data/figures/상담 {team_number}팀"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load analysis data
+    with open("data/analysis/analysis.json", "r", encoding="utf-8") as f:
+        analysis_data = json.load(f)
+
+    # Korean stress subcategories
+    subcategories = [
+        "직무 요구",
+        "직무 자율",
+        "관계 갈등",
+        "직무 불안",
+        "조직 체계",
+        "보상 부적절",
+        "직장 문화",
+    ]
+
+    # English translations for display
+    subcategories_english = [
+        "Job Demand",
+        "Job Control",
+        "Interpersonal Conflict",
+        "Job Insecurity",
+        "Organizational System",
+        "Inadequate Compensation",
+        "Workplace Culture",
+    ]
+
+    # Map of Korean to English for reference
+    korean_to_english = {k: v for k, v in zip(subcategories, subcategories_english)}
+
+    # Map subcategories to their cutoff values
+    cutoff_map = {
+        "직무 요구": CUTOFF_JOB_DEMAND,
+        "직무 자율": CUTOFF_INSUFFICIENT_JOB_CONTROL,
+        "관계 갈등": CUTOFF_INTERPERSONAL_CONFLICT,
+        "직무 불안": CUTOFF_JOB_INSECURITY,
+        "조직 체계": CUTOFF_ORGANIZATIONAL_SYSTEM,
+        "보상 부적절": CUTOFF_LACK_OF_REWARD,
+        "직장 문화": CUTOFF_OCCUPATIONAL_CLIMATE,
+    }
+
+    # Data structure to hold values for each subcategory
+    subcategory_data = {subcat: [] for subcat in subcategories}
+
+    # Team name
+    team_name = f"상담 {team_number}팀"
+    week_key = f"{week_number}주차"
+
+    # Collect stress subcategory scores for the specified week and team
+    for participant in analysis_data["participants"]:
+        if participant["team"] == team_name and week_key in participant["analysis"]:
+            try:
+                # Get stress subcategories data for this participant
+                stress_data = participant["analysis"][week_key]["type_averages"][
+                    "stress"
+                ]
+
+                # Add each subcategory value to the corresponding list
+                for subcat in subcategories:
+                    if subcat in stress_data:
+                        subcategory_data[subcat].append(stress_data[subcat])
+            except (KeyError, TypeError) as e:
+                # Skip if data is missing or invalid
+                continue
+
+    # Create figure for box plot
+    plt.figure(figsize=(12, 8))
+    plt.style.use("seaborn-v0_8-whitegrid")
+
+    # Create box plot (horizontal)
+    # Convert dictionary to list of values for box plot
+    box_data = [subcategory_data[subcat] for subcat in subcategories]
+
+    # Create horizontal box plot with English labels
+    box = plt.boxplot(
+        box_data,
+        vert=False,  # Horizontal orientation
+        patch_artist=True,  # Fill boxes with color
+        labels=subcategories_english,  # Use English subcategory names as labels
+    )
+
+    # Calculate medians for each subcategory
+    medians = [np.median(data) if len(data) > 0 else 0 for data in box_data]
+
+    # Choose colors based on median values and cutoff values
+    box_colors = []
+    for i, subcat in enumerate(subcategories):
+        median = medians[i]
+        cutoff = cutoff_map[subcat]
+
+        # Determine color based on median value compared to cutoffs
+        if median < cutoff[0]:
+            # Normal range (green)
+            box_colors.append("lightgreen")
+        elif median < cutoff[1]:
+            # Warning range (orange)
+            box_colors.append("orange")
+        else:
+            # High risk range (red)
+            box_colors.append("lightcoral")
+
+    # Apply colors to boxes
+    for patch, color in zip(box["boxes"], box_colors):
+        patch.set_facecolor(color)
+
+    # Add grid for better readability
+    plt.grid(True, axis="x", linestyle="--", alpha=0.7)
+
+    # Set labels and title
+    plt.xlabel("Score (0-100)", fontsize=12)
+    plt.title(
+        f"Team {team_number} Stress Subcategories - Week {week_number}", fontsize=14
+    )
+
+    # Set x-axis limits to 0-100 for stress scores
+    plt.xlim(0, 100)
+
+    # Add text with median values and cutoffs
+    for i, subcat in enumerate(subcategories):
+        cutoff = cutoff_map[subcat]
+        plt.text(
+            95,
+            i + 1,
+            f"Median: {medians[i]:.1f}\nCutoffs: {cutoff[0]}/{cutoff[1]}",
+            verticalalignment="center",
+            fontsize=9,
+        )
+
+        # Add cutoff vertical lines for each category
+        y_pos = i + 1
+        plt.plot([cutoff[0], cutoff[0]], [y_pos - 0.4, y_pos + 0.4], "k--", alpha=0.5)
+        plt.plot([cutoff[1], cutoff[1]], [y_pos - 0.4, y_pos + 0.4], "k--", alpha=0.5)
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(f"{output_dir}/stress_subcategories_week{week_number}.png", dpi=300)
+    plt.close()
+
+    print(
+        f"Stress subcategories box plot saved to {output_dir}/stress_subcategories_week{week_number}.png"
+    )
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -999,10 +1163,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Call the graph generation functions
     generate_bat_primary_distribution_graph(args.week, args.team)
     generate_exhaustion_distribution_graph(args.week, args.team)
     generate_cognitive_regulation_distribution_graph(args.week, args.team)
     generate_emotional_regulation_distribution_graph(args.week, args.team)
     generate_depersonalization_distribution_graph(args.week, args.team)
     generate_stress_distribution_graph(args.week, args.team)
+    generate_stress_subcategories_boxplot(args.week, args.team)
