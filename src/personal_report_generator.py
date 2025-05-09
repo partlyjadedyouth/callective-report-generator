@@ -212,5 +212,3 @@ for participant in participants:
         )  # Generate PDF, ensuring background graphics (like colors) are printed
         # browser.close() # Close the browser # Close the browser
         browser.close()  # Close the browser
-
-    break
