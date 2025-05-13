@@ -13,6 +13,7 @@ This script coordinates the process of:
 6. Generating personal reports for all participants
 7. Generating team figures for visualization
 8. Generating company-level summary figures
+9. Generating app usage figures and visualizations
 """
 
 # Import required libraries
@@ -45,6 +46,12 @@ from generate_team_figures import (
     generate_burnout_summary_table,
     generate_stress_summary_table,
     generate_emotional_labor_summary_table,
+    # App usage visualization functions
+    generate_app_usage_by_date_graph,
+    generate_emotion_records_by_date_graph,
+    generate_emotion_distribution_pie_chart,
+    generate_weekday_emotion_distribution_graph,
+    generate_timerange_emotion_distribution_graph,
 )  # Import functions for generating team and company figures
 
 
@@ -296,6 +303,43 @@ def main():
             print(
                 f"Error generating company-level summary figures: {e}"
             )  # Print error message
+
+        # Step 10: Generate app usage figures
+        if (
+            app_analysis_file
+        ):  # Only generate app usage figures if app usage analysis exists
+            print("Generating app usage figures...")  # Print status message
+            try:
+                # Generate app usage by date graph
+                generate_app_usage_by_date_graph(
+                    args.week
+                )  # Generate daily app usage graph
+
+                # Generate emotion records by date graph
+                generate_emotion_records_by_date_graph(
+                    args.week
+                )  # Generate daily emotion records graph
+
+                # Generate emotion distribution pie chart
+                generate_emotion_distribution_pie_chart(
+                    args.week
+                )  # Generate emotion distribution pie chart
+
+                # Generate weekday emotion distribution graph
+                generate_weekday_emotion_distribution_graph(
+                    args.week
+                )  # Generate weekday emotion distribution graph
+
+                # Generate timerange emotion distribution graph
+                generate_timerange_emotion_distribution_graph(
+                    args.week
+                )  # Generate timerange emotion distribution graph
+
+                print(
+                    "Successfully generated app usage figures."
+                )  # Print success message
+            except Exception as e:  # Catch any errors that occur
+                print(f"Error generating app usage figures: {e}")  # Print error message
 
         print("Successfully generated all figures.")  # Print success message
         return 0  # Return success code

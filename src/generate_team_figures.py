@@ -111,9 +111,14 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
             linewidth=2,
         )
 
-    # Get the maximum y value for filling background colors
-    ax = plt.gca()
-    ymax = ax.get_ylim()[1]
+    # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
+    plt.ylim(0, 1.0)
+
+    # Set consistent y-axis ticks
+    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+
+    # Get the maximum y value for filling background colors (use fixed value now)
+    ymax = 1.0
 
     # Draw vertical lines at cutoff values
     plt.axvline(x=cutoff_burnout_primary[0], color="gray", linestyle="--", alpha=0.5)
@@ -1038,18 +1043,7 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
     with open("data/analysis/analysis.json", "r", encoding="utf-8") as f:
         analysis_data = json.load(f)
 
-    # Korean stress subcategories
-    subcategories = [
-        "직무 요구",
-        "직무 자율",
-        "관계 갈등",
-        "직무 불안",
-        "조직 체계",
-        "보상 부적절",
-        "직장 문화",
-    ]
-
-    # English translations for display
+    # English subcategory names (this order will be maintained in the plot)
     subcategories_english = [
         "Job Demand",
         "Job Control",
@@ -1058,6 +1052,17 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
         "Organizational System",
         "Inadequate Compensation",
         "Workplace Culture",
+    ]
+
+    # Korean subcategories (matching the order of English subcategories)
+    subcategories = [
+        "직무 요구",
+        "직무 자율",
+        "관계 갈등",
+        "직무 불안",
+        "조직 체계",
+        "보상 부적절",
+        "직장 문화",
     ]
 
     # Map of Korean to English for reference
@@ -1103,15 +1108,21 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
     plt.style.use("seaborn-v0_8-whitegrid")
 
     # Create box plot (horizontal)
-    # Convert dictionary to list of values for box plot
+    # Convert dictionary to list of values for box plot, maintaining the order
     box_data = [subcategory_data[subcat] for subcat in subcategories]
+
+    # Reverse both box_data and subcategories_english to make the first item appear at the top
+    box_data = box_data[::-1]
+    reversed_subcategories_english = subcategories_english[::-1]
+    # Also reverse the subcategories to maintain alignment with the data
+    reversed_subcategories = subcategories[::-1]
 
     # Create horizontal box plot with English labels
     box = plt.boxplot(
         box_data,
         vert=False,  # Horizontal orientation
         patch_artist=True,  # Fill boxes with color
-        labels=subcategories_english,  # Use English subcategory names as labels
+        labels=reversed_subcategories_english,  # Use reversed English subcategory names as labels
     )
 
     # Calculate medians for each subcategory
@@ -1119,7 +1130,7 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
 
     # Choose colors based on median values and cutoff values
     box_colors = []
-    for i, subcat in enumerate(subcategories):
+    for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
         median = medians[i]
         cutoff = cutoff_map[subcat]
 
@@ -1151,7 +1162,7 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
     plt.xlim(0, 100)
 
     # Add text with median values and cutoffs
-    for i, subcat in enumerate(subcategories):
+    for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
         cutoff = cutoff_map[subcat]
         plt.text(
             95,
@@ -1257,12 +1268,18 @@ def generate_emotional_labor_subcategories_boxplot(week_number=0, team_number=No
     # Convert dictionary to list of values for box plot
     box_data = [subcategory_data[subcat] for subcat in subcategories]
 
+    # Reverse both box_data and subcategories_english to make the first item appear at the top
+    box_data = box_data[::-1]
+    reversed_subcategories_english = subcategories_english[::-1]
+    # Also reverse the subcategories to maintain alignment with the data
+    reversed_subcategories = subcategories[::-1]
+
     # Create horizontal box plot with English labels
     box = plt.boxplot(
         box_data,
         vert=False,  # Horizontal orientation
         patch_artist=True,  # Fill boxes with color
-        labels=subcategories_english,  # Use English subcategory names as labels
+        labels=reversed_subcategories_english,  # Use reversed English subcategory names as labels
     )
 
     # Calculate medians for each subcategory
@@ -1270,7 +1287,7 @@ def generate_emotional_labor_subcategories_boxplot(week_number=0, team_number=No
 
     # Choose colors based on median values and cutoff values
     box_colors = []
-    for i, subcat in enumerate(subcategories):
+    for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
         median = medians[i]
         cutoff = cutoff_map[subcat]
 
@@ -1301,7 +1318,7 @@ def generate_emotional_labor_subcategories_boxplot(week_number=0, team_number=No
     plt.xlim(0, 100)
 
     # Add text with median values and cutoffs
-    for i, subcat in enumerate(subcategories):
+    for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
         cutoff = cutoff_map[subcat]
         plt.text(
             95,
