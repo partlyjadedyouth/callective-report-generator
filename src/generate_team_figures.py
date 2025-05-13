@@ -2256,11 +2256,15 @@ def generate_app_usage_by_date_graph(week_number=0):
     sorted_dates = sorted(app_data["daily_user_counts"].keys())
 
     for date_str in sorted_dates:
-        # Get user count for this date
-        count = app_data["daily_user_counts"][date_str]
-
         # Convert date string to datetime object for formatting
         date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+
+        # Skip weekends (Saturday = 5, Sunday = 6)
+        if date_obj.weekday() >= 5:
+            continue
+
+        # Get user count for this date
+        count = app_data["daily_user_counts"][date_str]
 
         # Get day of week in English (Monday, Tuesday, etc.)
         day_of_week = date_obj.strftime("%A")
@@ -2297,7 +2301,11 @@ def generate_app_usage_by_date_graph(week_number=0):
     # Set axis labels and title
     plt.xlabel("Date", fontsize=12)
     plt.ylabel("Number of Users", fontsize=12)
-    plt.title(f"Daily App Usage - Week {week_number}", fontsize=14, fontweight="bold")
+    plt.title(
+        f"Daily App Usage (Weekdays) - Week {week_number}",
+        fontsize=14,
+        fontweight="bold",
+    )
 
     # Add a light grid for better readability
     plt.grid(True, linestyle="--", alpha=0.7)
@@ -2355,11 +2363,15 @@ def generate_emotion_records_by_date_graph(week_number=0):
     sorted_dates = sorted(app_data["daily_emotion_records"].keys())
 
     for date_str in sorted_dates:
-        # Get emotion record count for this date
-        count = app_data["daily_emotion_records"][date_str]
-
         # Convert date string to datetime object for formatting
         date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+
+        # Skip weekends (Saturday = 5, Sunday = 6)
+        if date_obj.weekday() >= 5:
+            continue
+
+        # Get emotion record count for this date
+        count = app_data["daily_emotion_records"][date_str]
 
         # Get day of week in English (Monday, Tuesday, etc.)
         day_of_week = date_obj.strftime("%A")
@@ -2397,7 +2409,9 @@ def generate_emotion_records_by_date_graph(week_number=0):
     plt.xlabel("Date", fontsize=12)
     plt.ylabel("Number of Emotion Records", fontsize=12)
     plt.title(
-        f"Daily Emotion Records - Week {week_number}", fontsize=14, fontweight="bold"
+        f"Daily Emotion Records (Weekdays) - Week {week_number}",
+        fontsize=14,
+        fontweight="bold",
     )
 
     # Add a light grid for better readability
@@ -2557,15 +2571,13 @@ def generate_weekday_emotion_distribution_graph(week_number=0):
         return
 
     # Dictionary to hold counts by weekday
-    # Initialize with all weekdays to ensure they all appear in order
+    # Initialize with weekdays only (excluding weekends)
     weekday_emotions = {
         "Monday": {"positive": 0, "negative": 0},
         "Tuesday": {"positive": 0, "negative": 0},
         "Wednesday": {"positive": 0, "negative": 0},
         "Thursday": {"positive": 0, "negative": 0},
         "Friday": {"positive": 0, "negative": 0},
-        "Saturday": {"positive": 0, "negative": 0},
-        "Sunday": {"positive": 0, "negative": 0},
     }
 
     # Process daily emotion data
@@ -2576,7 +2588,7 @@ def generate_weekday_emotion_distribution_graph(week_number=0):
         # Get day of week in English
         day_of_week = date_obj.strftime("%A")
 
-        # Add counts to our dictionary
+        # Add counts to our dictionary (only for weekdays)
         if day_of_week in weekday_emotions:
             weekday_emotions[day_of_week]["positive"] += counts["positive"]
             weekday_emotions[day_of_week]["negative"] += counts["negative"]
@@ -2586,15 +2598,13 @@ def generate_weekday_emotion_distribution_graph(week_number=0):
     positive_percentages = []
     negative_percentages = []
 
-    # Extract data in the correct order
+    # Extract data in the correct order (weekdays only)
     for day in [
         "Monday",
         "Tuesday",
         "Wednesday",
         "Thursday",
         "Friday",
-        "Saturday",
-        "Sunday",
     ]:
         if day in weekday_emotions:
             weekdays.append(day)
@@ -2646,7 +2656,7 @@ def generate_weekday_emotion_distribution_graph(week_number=0):
     # Customize axes and labels
     ax.set_ylabel("Percentage of Emotions (%)", fontsize=12)
     ax.set_title(
-        f"Weekday Emotion Distribution - Week {week_number}",
+        f"Weekday Emotion Distribution (Mon-Fri) - Week {week_number}",
         fontsize=16,
         fontweight="bold",
     )
