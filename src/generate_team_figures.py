@@ -2725,14 +2725,12 @@ def generate_timerange_emotion_distribution_graph(week_number=0):
 
     # Time ranges in the order they should appear on the x-axis
     ordered_time_ranges = [
-        "00:00-9:00",
-        "9:00-10:30",
+        "8:00-10:30",
         "10:30-12:00",
         "12:00-13:30",
         "13:30-15:00",
         "15:00-16:30",
-        "16:30-18:00",
-        "18:00-24:00",
+        "16:30-19:00",
     ]
 
     # Extract data in the correct order
