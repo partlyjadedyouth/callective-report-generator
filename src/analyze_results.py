@@ -9,12 +9,14 @@ This script analyzes the survey results from the 'results' directory:
 2. Calculates per-participant type-specific averages within each category
 3. Generates summary statistics for all employees and individual teams
 4. Saves the analysis as a JSON file in the 'data/analysis' directory
+5. Generates a CSV file with risk level distribution data
 """
 
 # Import required libraries
 import os  # Library for operating system functionality
 import json  # Library for handling JSON data
 import statistics  # Library for statistical calculations
+import csv  # Library for handling CSV files
 from collections import (
     defaultdict,
 )  # Library to create dictionaries with default values
@@ -246,6 +248,9 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(final_analysis, f, ensure_ascii=False, indent=2)
 
+    # Generate and save risk levels CSV file
+    generate_risk_levels_csv(group_analysis, output_dir)
+
     print(f"Participant and group analysis completed and saved to {output_file}")
     return output_file
 
@@ -399,6 +404,130 @@ def generate_group_analysis(all_participants):
         group_analysis[group_name]["participant_count"] = len(filtered_participants)
 
     return group_analysis
+
+
+def generate_risk_levels_csv(group_analysis, output_dir):
+    """
+    Generate a CSV file with risk level data for each week and group.
+
+    Args:
+        group_analysis (dict): Dictionary containing analysis for all employees and each team
+        output_dir (str): Directory to save the output CSV file
+
+    Returns:
+        str: Path to the saved CSV file
+    """
+    # Get all weeks available across all groups
+    all_weeks = set()
+    for group_data in group_analysis.values():
+        all_weeks.update(group_data["analysis"].keys())
+
+    # Sort weeks to ensure consistent order
+    sorted_weeks = sorted(all_weeks)
+
+    # Group names in the desired order
+    group_names = ["회사", "상담 1팀", "상담 2팀", "상담 3팀", "상담 4팀"]
+
+    # Define the CSV file path
+    csv_file_path = os.path.join(output_dir, "risk_levels.csv")
+
+    # Create and write to the CSV file
+    with open(csv_file_path, "w", newline="", encoding="utf-8") as csvfile:
+        csvwriter = csv.writer(csvfile)
+
+        # Write header rows
+        for week in sorted_weeks:
+            # Write burnout score header
+            csvwriter.writerow([f"{week} 번아웃 총점"])
+            row = []
+            for group_name in group_names:
+                if (
+                    group_name in group_analysis
+                    and week in group_analysis[group_name]["analysis"]
+                ):
+                    bat_primary_score = group_analysis[group_name]["analysis"][week][
+                        "category_averages"
+                    ].get("BAT_primary")
+                    row.append(
+                        bat_primary_score if bat_primary_score is not None else "N/A"
+                    )
+                else:
+                    row.append("N/A")
+            csvwriter.writerow(row)
+
+            # Write stress score header
+            csvwriter.writerow([f"{week} 직무스트레스 총점"])
+            row = []
+            for group_name in group_names:
+                if (
+                    group_name in group_analysis
+                    and week in group_analysis[group_name]["analysis"]
+                ):
+                    stress_score = group_analysis[group_name]["analysis"][week][
+                        "category_averages"
+                    ].get("stress")
+                    row.append(stress_score if stress_score is not None else "N/A")
+                else:
+                    row.append("N/A")
+            csvwriter.writerow(row)
+
+            # Write burnout distribution header
+            csvwriter.writerow([f"{week} 번아웃 분포"])
+
+            # Write the header for distribution labels - now grouped by team
+            header_row = [""]
+            for group in group_names:
+                header_row.extend([f"{group} 정상", f"{group} 준위험", f"{group} 위험"])
+            csvwriter.writerow(header_row)
+
+            # Write burnout distribution counts - now grouped by team
+            row = ["인원수"]
+            for group_name in group_names:
+                if (
+                    group_name in group_analysis
+                    and week in group_analysis[group_name]["analysis"]
+                ):
+                    risk_counts = group_analysis[group_name]["analysis"][week][
+                        "risk_levels"
+                    ].get("BAT_primary", {})
+                    row.append(risk_counts.get("정상", 0))
+                    row.append(risk_counts.get("준위험", 0))
+                    row.append(risk_counts.get("위험", 0))
+                else:
+                    row.extend(["N/A", "N/A", "N/A"])
+            csvwriter.writerow(row)
+
+            # Write stress distribution header
+            csvwriter.writerow([f"{week} 직무스트레스 분포"])
+
+            # Write the header for distribution labels - now grouped by team
+            header_row = [""]
+            for group in group_names:
+                header_row.extend([f"{group} 정상", f"{group} 준위험", f"{group} 위험"])
+            csvwriter.writerow(header_row)
+
+            # Write stress distribution counts - now grouped by team
+            row = ["인원수"]
+            for group_name in group_names:
+                if (
+                    group_name in group_analysis
+                    and week in group_analysis[group_name]["analysis"]
+                ):
+                    risk_counts = group_analysis[group_name]["analysis"][week][
+                        "risk_levels"
+                    ].get("stress", {})
+                    row.append(risk_counts.get("정상", 0))
+                    row.append(risk_counts.get("준위험", 0))
+                    row.append(risk_counts.get("위험", 0))
+                else:
+                    row.extend(["N/A", "N/A", "N/A"])
+            csvwriter.writerow(row)
+
+            # Add a blank row between weeks for better readability
+            csvwriter.writerow([])
+
+    print(f"Risk levels CSV file created at {csv_file_path}")
+    return csv_file_path
 
 
 def load_questionnaire_types():
