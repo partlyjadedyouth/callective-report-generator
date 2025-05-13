@@ -12,6 +12,7 @@ import matplotlib.font_manager as fm
 import matplotlib as mpl
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Circle
+import datetime  # For date formatting and day of week calculation
 
 # 절단점 값을 가져오기 위한 임포트
 from cutoff_values import (
@@ -2221,6 +2222,600 @@ def generate_emotional_labor_summary_table(week_number=0):
     plt.close(fig)
 
 
+def generate_app_usage_by_date_graph(week_number=0):
+    """
+    Generate a line graph showing daily app usage for the specified week.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+    """
+    # Create figures directory if it doesn't exist
+    output_dir = f"data/figures/회사/앱 사용 기록"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load app analysis data
+    try:
+        # Read the app analysis data for the specified week
+        with open(
+            f"data/analysis/app_analysis_{week_number}주차.json", "r", encoding="utf-8"
+        ) as f:
+            app_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: app_analysis_{week_number}주차.json not found")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from app_analysis_{week_number}주차.json")
+        return
+
+    # Extract daily user count data
+    dates = []
+    user_counts = []
+    day_names = []
+
+    # Sort the dates to ensure they're in chronological order
+    sorted_dates = sorted(app_data["daily_user_counts"].keys())
+
+    for date_str in sorted_dates:
+        # Get user count for this date
+        count = app_data["daily_user_counts"][date_str]
+
+        # Convert date string to datetime object for formatting
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+
+        # Get day of week in English (Monday, Tuesday, etc.)
+        day_of_week = date_obj.strftime("%A")
+
+        # Format date for display (MM-DD)
+        formatted_date = date_obj.strftime("%m-%d")
+
+        # Add to our lists
+        dates.append(formatted_date)
+        user_counts.append(count)
+        day_names.append(day_of_week)
+
+    # Create the figure and axis
+    plt.figure(figsize=(12, 6))
+    plt.style.use("seaborn-v0_8-whitegrid")
+
+    # Plot the line graph
+    plt.plot(
+        range(len(dates)),
+        user_counts,
+        marker="o",
+        linestyle="-",
+        linewidth=2,
+        markersize=8,
+        color="#1f77b4",
+    )
+
+    # Create custom x-tick labels with date and day of week
+    x_labels = [f"{date}\n({day})" for date, day in zip(dates, day_names)]
+
+    # Set x-axis ticks and labels
+    plt.xticks(range(len(dates)), x_labels, rotation=45, ha="right")
+
+    # Set axis labels and title
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel("Number of Users", fontsize=12)
+    plt.title(f"Daily App Usage - Week {week_number}", fontsize=14, fontweight="bold")
+
+    # Add a light grid for better readability
+    plt.grid(True, linestyle="--", alpha=0.7)
+
+    # Add values on top of each point
+    for i, count in enumerate(user_counts):
+        plt.text(
+            i, count + 0.5, str(count), ha="center", va="bottom", fontweight="bold"
+        )
+
+    # Set y-axis to start from 0
+    plt.ylim(bottom=0)
+
+    # Adjust layout to make room for x-axis labels
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(f"{output_dir}/{week_number}주차_앱_사용자수.png", dpi=300)
+    plt.close()
+
+    print(f"App usage graph saved to {output_dir}/{week_number}주차_앱_사용자수.png")
+
+
+def generate_emotion_records_by_date_graph(week_number=0):
+    """
+    Generate a line graph showing daily emotion records for the specified week.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+    """
+    # Create figures directory if it doesn't exist
+    output_dir = f"data/figures/회사/앱 사용 기록"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load app analysis data
+    try:
+        # Read the app analysis data for the specified week
+        with open(
+            f"data/analysis/app_analysis_{week_number}주차.json", "r", encoding="utf-8"
+        ) as f:
+            app_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: app_analysis_{week_number}주차.json not found")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from app_analysis_{week_number}주차.json")
+        return
+
+    # Extract daily emotion record data
+    dates = []
+    emotion_counts = []
+    day_names = []
+
+    # Sort the dates to ensure they're in chronological order
+    sorted_dates = sorted(app_data["daily_emotion_records"].keys())
+
+    for date_str in sorted_dates:
+        # Get emotion record count for this date
+        count = app_data["daily_emotion_records"][date_str]
+
+        # Convert date string to datetime object for formatting
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+
+        # Get day of week in English (Monday, Tuesday, etc.)
+        day_of_week = date_obj.strftime("%A")
+
+        # Format date for display (MM-DD)
+        formatted_date = date_obj.strftime("%m-%d")
+
+        # Add to our lists
+        dates.append(formatted_date)
+        emotion_counts.append(count)
+        day_names.append(day_of_week)
+
+    # Create the figure and axis
+    plt.figure(figsize=(12, 6))
+    plt.style.use("seaborn-v0_8-whitegrid")
+
+    # Plot the line graph with a different color than the user count graph
+    plt.plot(
+        range(len(dates)),
+        emotion_counts,
+        marker="o",
+        linestyle="-",
+        linewidth=2,
+        markersize=8,
+        color="#ff7f0e",
+    )
+
+    # Create custom x-tick labels with date and day of week
+    x_labels = [f"{date}\n({day})" for date, day in zip(dates, day_names)]
+
+    # Set x-axis ticks and labels
+    plt.xticks(range(len(dates)), x_labels, rotation=45, ha="right")
+
+    # Set axis labels and title
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel("Number of Emotion Records", fontsize=12)
+    plt.title(
+        f"Daily Emotion Records - Week {week_number}", fontsize=14, fontweight="bold"
+    )
+
+    # Add a light grid for better readability
+    plt.grid(True, linestyle="--", alpha=0.7)
+
+    # Add values on top of each point
+    for i, count in enumerate(emotion_counts):
+        plt.text(i, count + 1, str(count), ha="center", va="bottom", fontweight="bold")
+
+    # Set y-axis to start from 0
+    plt.ylim(bottom=0)
+
+    # Adjust layout to make room for x-axis labels
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(f"{output_dir}/{week_number}주차_감정_기록수.png", dpi=300)
+    plt.close()
+
+    print(
+        f"Emotion records graph saved to {output_dir}/{week_number}주차_감정_기록수.png"
+    )
+
+
+def generate_emotion_distribution_pie_chart(week_number=0):
+    """
+    Generate a pie chart showing the distribution of positive vs negative emotions for the specified week.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+    """
+    # Create figures directory if it doesn't exist
+    output_dir = f"data/figures/회사/앱 사용 기록"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load app analysis data
+    try:
+        # Read the app analysis data for the specified week
+        with open(
+            f"data/analysis/app_analysis_{week_number}주차.json", "r", encoding="utf-8"
+        ) as f:
+            app_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: app_analysis_{week_number}주차.json not found")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from app_analysis_{week_number}주차.json")
+        return
+
+    # Calculate total positive and negative emotions from emotion_categories
+    if "emotion_categories" in app_data:
+        positive_count = app_data["emotion_categories"]["positive"]["count"]
+        negative_count = app_data["emotion_categories"]["negative"]["count"]
+    else:
+        # If emotion_categories is not available, sum up daily counts
+        positive_count = 0
+        negative_count = 0
+        for date, counts in app_data["daily_emotion_categories"].items():
+            positive_count += counts["positive"]
+            negative_count += counts["negative"]
+
+    # Calculate total and percentages
+    total_emotions = positive_count + negative_count
+    positive_percent = (positive_count / total_emotions) * 100
+    negative_percent = (negative_count / total_emotions) * 100
+
+    # Create data for pie chart
+    emotion_counts = [positive_count, negative_count]
+    emotion_labels = [
+        f"Positive\n{positive_count} ({positive_percent:.1f}%)",
+        f"Negative\n{negative_count} ({negative_percent:.1f}%)",
+    ]
+    colors = ["#1f77b4", "#d62728"]  # Blue for positive, Red for negative
+
+    # Create figure
+    plt.figure(figsize=(10, 8))
+
+    # Create pie chart
+    patches, texts, autotexts = plt.pie(
+        emotion_counts,
+        labels=emotion_labels,
+        colors=colors,
+        autopct="%1.1f%%",
+        startangle=90,
+        wedgeprops={"edgecolor": "w", "linewidth": 1},
+        textprops={"fontsize": 12, "fontweight": "bold"},
+    )
+
+    # Customize text style
+    for autotext in autotexts:
+        autotext.set_fontsize(14)
+        autotext.set_fontweight("bold")
+        autotext.set_color("white")
+
+    # Draw a circle at the center to make it a donut chart (optional)
+    # centre_circle = plt.Circle((0, 0), 0.70, fc='white')
+    # plt.gca().add_artist(centre_circle)
+
+    # Equal aspect ratio ensures that pie is drawn as a circle
+    plt.axis("equal")
+
+    # Add title
+    plt.title(
+        f"Emotion Distribution - Week {week_number}",
+        fontsize=16,
+        fontweight="bold",
+        pad=20,
+    )
+
+    # Add legend
+    plt.legend(
+        ["Positive Emotions", "Negative Emotions"],
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.15),
+        ncol=2,
+        fontsize=12,
+    )
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_감정_분포.png", dpi=300, bbox_inches="tight"
+    )
+    plt.close()
+
+    print(
+        f"Emotion distribution pie chart saved to {output_dir}/{week_number}주차_감정_분포.png"
+    )
+
+
+def generate_weekday_emotion_distribution_graph(week_number=0):
+    """
+    Generate a stacked bar chart showing the distribution of positive vs negative emotions
+    for each day of the week.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+    """
+    # Create figures directory if it doesn't exist
+    output_dir = f"data/figures/회사/앱 사용 기록"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load app analysis data
+    try:
+        # Read the app analysis data for the specified week
+        with open(
+            f"data/analysis/app_analysis_{week_number}주차.json", "r", encoding="utf-8"
+        ) as f:
+            app_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: app_analysis_{week_number}주차.json not found")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from app_analysis_{week_number}주차.json")
+        return
+
+    # Dictionary to hold counts by weekday
+    # Initialize with all weekdays to ensure they all appear in order
+    weekday_emotions = {
+        "Monday": {"positive": 0, "negative": 0},
+        "Tuesday": {"positive": 0, "negative": 0},
+        "Wednesday": {"positive": 0, "negative": 0},
+        "Thursday": {"positive": 0, "negative": 0},
+        "Friday": {"positive": 0, "negative": 0},
+        "Saturday": {"positive": 0, "negative": 0},
+        "Sunday": {"positive": 0, "negative": 0},
+    }
+
+    # Process daily emotion data
+    for date_str, counts in app_data["daily_emotion_categories"].items():
+        # Convert date string to datetime object
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+
+        # Get day of week in English
+        day_of_week = date_obj.strftime("%A")
+
+        # Add counts to our dictionary
+        if day_of_week in weekday_emotions:
+            weekday_emotions[day_of_week]["positive"] += counts["positive"]
+            weekday_emotions[day_of_week]["negative"] += counts["negative"]
+
+    # Prepare data for plotting
+    weekdays = []
+    positive_percentages = []
+    negative_percentages = []
+
+    # Extract data in the correct order
+    for day in [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]:
+        if day in weekday_emotions:
+            weekdays.append(day)
+            pos = weekday_emotions[day]["positive"]
+            neg = weekday_emotions[day]["negative"]
+            total = pos + neg
+
+            # Calculate percentages (avoid division by zero)
+            if total > 0:
+                pos_percentage = (pos / total) * 100
+                neg_percentage = (neg / total) * 100
+            else:
+                pos_percentage = 0
+                neg_percentage = 0
+
+            positive_percentages.append(pos_percentage)
+            negative_percentages.append(neg_percentage)
+
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Create the stacked bar chart with normalized heights (100% for each bar)
+    # First, plot positive emotions (blue, bottom)
+    pos_bars = ax.bar(weekdays, positive_percentages, color="#1f77b4", label="Positive")
+
+    # Then, stack negative emotions on top (red)
+    neg_bars = ax.bar(
+        weekdays,
+        negative_percentages,
+        bottom=positive_percentages,
+        color="#d62728",
+        label="Negative",
+    )
+
+    # Add percentage labels on the bars
+    for i, percentage in enumerate(positive_percentages):
+        # Position the text in the middle of the positive bar
+        ax.text(
+            i,  # x position (bar index)
+            percentage / 2,  # y position (middle of positive bar)
+            f"{percentage:.0f}%",  # text (percentage with no decimal places)
+            ha="center",
+            va="center",
+            color="white",
+            fontweight="bold",
+            fontsize=12,
+        )
+
+    # Customize axes and labels
+    ax.set_ylabel("Percentage of Emotions (%)", fontsize=12)
+    ax.set_title(
+        f"Weekday Emotion Distribution - Week {week_number}",
+        fontsize=16,
+        fontweight="bold",
+    )
+
+    # Set y-axis limits to ensure all bars are the same height (0-100%)
+    ax.set_ylim(0, 100)
+
+    # Add y-axis tick marks at 0%, 25%, 50%, 75%, and 100%
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"])
+
+    # Add grid lines for readability
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_요일별_감정_분포.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    print(
+        f"Weekday emotion distribution graph saved to {output_dir}/{week_number}주차_요일별_감정_분포.png"
+    )
+
+
+def generate_timerange_emotion_distribution_graph(week_number=0):
+    """
+    Generate a stacked bar chart showing the distribution of positive vs negative emotions
+    for each time range of the day.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+    """
+    # Create figures directory if it doesn't exist
+    output_dir = f"data/figures/회사/앱 사용 기록"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load app analysis data
+    try:
+        # Read the app analysis data for the specified week
+        with open(
+            f"data/analysis/app_analysis_{week_number}주차.json", "r", encoding="utf-8"
+        ) as f:
+            app_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: app_analysis_{week_number}주차.json not found")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from app_analysis_{week_number}주차.json")
+        return
+
+    # Check if time range emotion data exists
+    if "time_range_emotion_categories" not in app_data:
+        print("Error: No time range emotion data found in the app analysis data")
+        return
+
+    # Process time range emotion data
+    time_ranges = []
+    positive_percentages = []
+    negative_percentages = []
+
+    # Time ranges in the order they should appear on the x-axis
+    ordered_time_ranges = [
+        "00:00-9:00",
+        "9:00-10:30",
+        "10:30-12:00",
+        "12:00-13:30",
+        "13:30-15:00",
+        "15:00-16:30",
+        "16:30-18:00",
+        "18:00-24:00",
+    ]
+
+    # Extract data in the correct order
+    for time_range in ordered_time_ranges:
+        if time_range in app_data["time_range_emotion_categories"]:
+            time_ranges.append(time_range)
+            counts = app_data["time_range_emotion_categories"][time_range]
+
+            # Get positive and negative counts
+            pos = counts["positive"]
+            neg = counts["negative"]
+            total = pos + neg
+
+            # Calculate percentages (avoid division by zero)
+            if total > 0:
+                pos_percentage = (pos / total) * 100
+                neg_percentage = (neg / total) * 100
+            else:
+                pos_percentage = 0
+                neg_percentage = 0
+
+            positive_percentages.append(pos_percentage)
+            negative_percentages.append(neg_percentage)
+
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Create the stacked bar chart with normalized heights (100% for each bar)
+    # First, plot positive emotions (blue, bottom)
+    pos_bars = ax.bar(
+        time_ranges, positive_percentages, color="#1f77b4", label="Positive"
+    )
+
+    # Then, stack negative emotions on top (red)
+    neg_bars = ax.bar(
+        time_ranges,
+        negative_percentages,
+        bottom=positive_percentages,
+        color="#d62728",
+        label="Negative",
+    )
+
+    # Add percentage labels on the bars
+    for i, percentage in enumerate(positive_percentages):
+        # Position the text in the middle of the positive bar
+        ax.text(
+            i,  # x position (bar index)
+            percentage / 2,  # y position (middle of positive bar)
+            f"{percentage:.0f}%",  # text (percentage with no decimal places)
+            ha="center",
+            va="center",
+            color="white",
+            fontweight="bold",
+            fontsize=12,
+        )
+
+    # Customize axes and labels
+    ax.set_ylabel("Percentage of Emotions (%)", fontsize=12)
+    ax.set_title(
+        f"Time-of-Day Emotion Distribution - Week {week_number}",
+        fontsize=16,
+        fontweight="bold",
+    )
+
+    # Rotate x-axis labels for better readability
+    plt.xticks(rotation=45, ha="right")
+
+    # Set y-axis limits to ensure all bars are the same height (0-100%)
+    ax.set_ylim(0, 100)
+
+    # Add y-axis tick marks at 0%, 25%, 50%, 75%, and 100%
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"])
+
+    # Add grid lines for readability
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(
+        f"{output_dir}/{week_number}주차_시간대별_감정_분포.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    print(
+        f"Time range emotion distribution graph saved to {output_dir}/{week_number}주차_시간대별_감정_분포.png"
+    )
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -2252,4 +2847,11 @@ if __name__ == "__main__":
 
     generate_burnout_summary_table(args.week)
     generate_stress_summary_table(args.week)
-    generate_emotional_labor_summary_table(args.week)  # Added call to the new function
+    generate_emotional_labor_summary_table(args.week)
+    generate_app_usage_by_date_graph(args.week)
+    generate_emotion_records_by_date_graph(args.week)
+    generate_emotion_distribution_pie_chart(args.week)
+    generate_weekday_emotion_distribution_graph(args.week)
+    generate_timerange_emotion_distribution_graph(
+        args.week
+    )  # Added call to the new function
