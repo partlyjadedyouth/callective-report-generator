@@ -27,6 +27,53 @@ from cutoff_values import (
 )  # Import cutoff values for burnout risk assessment
 
 
+def load_participant_ids(csv_file="data/csv/participants.csv"):
+    """
+    Load participant IDs from a CSV file, using name and team as matching criteria.
+
+    Args:
+        csv_file (str): Path to the CSV file containing participant information
+
+    Returns:
+        dict: Dictionary mapping (name, team) tuples to participant IDs
+    """
+    # Dictionary to store participant IDs with name and team as keys
+    participant_ids = {}
+
+    # Check if the CSV file exists
+    if not os.path.exists(csv_file):
+        print(
+            f"Warning: Participants CSV file '{csv_file}' not found. No IDs will be added."
+        )
+        return participant_ids
+
+    # Read the CSV file
+    try:
+        with open(csv_file, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            # Iterate through each row in the CSV
+            for row in reader:
+                # Extract name, team, and ID
+                # Note: CSV column names must match the expected values
+                name = row.get("성함", "").strip()
+                team = row.get("소속", "").strip()
+                participant_id = row.get("아이디", "").strip()
+
+                # Skip rows with missing data
+                if not (name and team):
+                    continue
+
+                # Store participant ID with name and team as key
+                participant_ids[(name, team)] = participant_id
+
+        print(f"Loaded {len(participant_ids)} participant IDs from {csv_file}")
+        return participant_ids
+
+    except Exception as e:
+        print(f"Error loading participant IDs: {e}")
+        return {}
+
+
 def analyze_results(results_dir="data/results", output_dir="data/analysis"):
     """
     Analyze survey results and generate statistics for each participant.
@@ -40,6 +87,9 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
     """
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
+
+    # Load participant IDs from CSV
+    participant_ids = load_participant_ids()
 
     # Dictionary to store all participants with their weekly analyses
     # Structure: { "unique_id": { "name": "", "team": "", "role": "", "phone": "", "email": "", "analysis": { "0주차": {...}, "2주차": {...} } } }
@@ -95,6 +145,11 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
                     "email": email,  # Store email address
                     "analysis": {},
                 }
+
+                # Add ID from participants.csv if available
+                participant_id = participant_ids.get((name, team), "")
+                if participant_id:
+                    all_participants[unique_id]["id"] = participant_id
 
             # Initialize analysis for this week
             weekly_analysis = {"category_averages": {}, "type_averages": {}}
@@ -233,8 +288,14 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
             "name": participant_data["name"],
             "team": participant_data["team"],
             "role": participant_data["role"],
+            "id": (
+                participant_data["id"]
+                if "id" in participant_data and participant_data["id"]
+                else None
+            ),
             "analysis": participant_data["analysis"],
         }
+
         participants_list.append(output_participant)
 
     # Generate team and overall analysis
