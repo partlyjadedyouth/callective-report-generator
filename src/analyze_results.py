@@ -19,6 +19,10 @@ from collections import (
     defaultdict,
 )  # Library to create dictionaries with default values
 from pathlib import Path  # Library for handling file paths
+from cutoff_values import (
+    CUTOFF_BURNOUT_PRIMARY,
+    CUTOFF_STRESS,  # Import cutoff values for stress risk assessment
+)  # Import cutoff values for burnout risk assessment
 
 
 def analyze_results(results_dir="data/results", output_dir="data/analysis"):
@@ -289,7 +293,11 @@ def generate_group_analysis(all_participants):
 
         # For each week, calculate aggregated statistics
         for week in all_weeks:
-            week_data = {"category_averages": {}, "type_averages": {}}
+            week_data = {
+                "category_averages": {},
+                "type_averages": {},
+                "risk_levels": {},
+            }
 
             # Collect all scores for this week across participants in this group
             category_scores = {
@@ -306,6 +314,20 @@ def generate_group_analysis(all_participants):
                 "stress": defaultdict(list),
             }
 
+            # Initialize counters for BAT_primary risk levels
+            bat_primary_risk_counts = {
+                "정상": 0,  # Normal - BAT_primary <= CUTOFF_BURNOUT_PRIMARY[0]
+                "준위험": 0,  # Caution - CUTOFF_BURNOUT_PRIMARY[0] < BAT_primary <= CUTOFF_BURNOUT_PRIMARY[1]
+                "위험": 0,  # Risk - BAT_primary > CUTOFF_BURNOUT_PRIMARY[1]
+            }
+
+            # Initialize counters for stress risk levels
+            stress_risk_counts = {
+                "정상": 0,  # Normal - stress <= CUTOFF_STRESS[0]
+                "준위험": 0,  # Caution - CUTOFF_STRESS[0] < stress <= CUTOFF_STRESS[1]
+                "위험": 0,  # Risk - stress > CUTOFF_STRESS[1]
+            }
+
             # Collect data from all participants in this group for this week
             for participant_data in filtered_participants.values():
                 if week in participant_data["analysis"]:
@@ -317,6 +339,24 @@ def generate_group_analysis(all_participants):
                     ].items():
                         if value is not None:
                             category_scores[category].append(value)
+
+                            # Count BAT_primary risk levels
+                            if category == "BAT_primary":
+                                if value <= CUTOFF_BURNOUT_PRIMARY[0]:
+                                    bat_primary_risk_counts["정상"] += 1
+                                elif value <= CUTOFF_BURNOUT_PRIMARY[1]:
+                                    bat_primary_risk_counts["준위험"] += 1
+                                else:
+                                    bat_primary_risk_counts["위험"] += 1
+
+                            # Count stress risk levels
+                            elif category == "stress":
+                                if value <= CUTOFF_STRESS[0]:
+                                    stress_risk_counts["정상"] += 1
+                                elif value <= CUTOFF_STRESS[1]:
+                                    stress_risk_counts["준위험"] += 1
+                                else:
+                                    stress_risk_counts["위험"] += 1
 
                     # Collect type averages
                     for category, type_data in participant_week_data[
@@ -345,6 +385,12 @@ def generate_group_analysis(all_participants):
                         )
                     else:
                         week_data["type_averages"][category][type_name] = None
+
+            # Add BAT_primary risk level counts to the week data
+            week_data["risk_levels"]["BAT_primary"] = bat_primary_risk_counts
+
+            # Add stress risk level counts to the week data
+            week_data["risk_levels"]["stress"] = stress_risk_counts
 
             # Add this week's analysis to the group's analysis
             group_analysis[group_name]["analysis"][week] = week_data
