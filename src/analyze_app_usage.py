@@ -4,290 +4,317 @@
 """
 App Usage Data Analyzer
 
-이 스크립트는 앱 사용 데이터를 분석하여 app_analysis.json 파일을 생성합니다:
-1. data/csv 디렉토리에서 app_usage_data CSV 파일을 읽어들입니다
-2. 참가자별로 데이터를 분류합니다
-3. analysis.json과 유사한 형식으로 결과를 저장합니다 (성별 정보 제외)
-4. 한글 필드 이름을 그대로 유지합니다
+This script analyzes app usage data from CSV files:
+1. Counts unique app users per day (identified by ID)
+2. Counts emotion records per day
+3. Only includes data from users whose IDs exist in participants.csv
+4. Processes factors ("선택한 요인") into lists when separated by semicolons
+5. Counts positive and negative emotions and their associated factors
+6. Analyzes emotions by day and time ranges
+7. Saves analysis results to a JSON file in the data/analysis directory
 """
 
-# 필요한 라이브러리 가져오기
-import os  # 운영 체제 기능을 위한 라이브러리
-import json  # JSON 데이터 처리를 위한 라이브러리
-import pandas as pd  # 데이터 분석을 위한 pandas 라이브러리
-import statistics  # 통계 계산을 위한 라이브러리
-from collections import defaultdict  # 기본값이 있는 딕셔너리 생성을 위한 라이브러리
-from pathlib import Path  # 파일 경로 처리를 위한 라이브러리
-import re  # 정규 표현식 처리를 위한 라이브러리
+# Import required libraries
+import os  # Library for operating system functionality
+import csv  # Library for handling CSV files
+import json  # Library for handling JSON data
+from collections import defaultdict  # Library for dictionaries with default values
+from datetime import datetime, time  # Library for date and time handling
 
 
-def analyze_app_usage(csv_dir="data/csv", output_dir="data/analysis"):
+def load_valid_ids(csv_file="data/csv/participants.csv"):
     """
-    앱 사용 데이터를 분석하고 참가자별 통계를 생성합니다.
+    Load participant IDs from a CSV file to determine which user data to include in analysis.
 
     Args:
-        csv_dir (str): 앱 사용 데이터 CSV 파일이 있는 디렉토리
-        output_dir (str): 분석 결과를 저장할 디렉토리
+        csv_file (str): Path to the CSV file containing participant information
 
     Returns:
-        str: 저장된 분석 파일 경로 또는 결과가 없는 경우 None
+        set: Set of valid participant IDs
     """
-    # 출력 디렉토리가 없는 경우 생성
-    os.makedirs(output_dir, exist_ok=True)  # 디렉토리가 없으면 생성
+    # Set to store valid participant IDs
+    valid_ids = set()
 
-    # 모든 참가자를 저장할 딕셔너리
-    # 구조: { "name": { "name": "", "team": "", "role": "", "app_usage": { "0주차": {...} } } }
-    all_participants = {}  # 모든 참가자 정보를 저장할 딕셔너리
+    # Check if the CSV file exists
+    if not os.path.exists(csv_file):
+        print(f"Warning: Participants CSV file '{csv_file}' not found.")
+        return valid_ids
 
-    # CSV 디렉토리에서 app_usage_data 파일 찾기
-    app_usage_files = list(
-        Path(csv_dir).glob("app_usage_data_*.csv")
-    )  # 앱 사용 데이터 CSV 파일 목록 가져오기
+    # Read the CSV file
+    try:
+        with open(csv_file, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            # Iterate through each row in the CSV
+            for row in reader:
+                # Extract ID
+                participant_id = row.get("아이디", "").strip()
 
-    if not app_usage_files:  # 파일이 없는 경우
-        print("앱 사용 데이터 CSV 파일을 찾을 수 없습니다.")  # 오류 메시지 출력
-        return None  # None 반환
+                # Skip rows with missing IDs
+                if not participant_id:
+                    continue
 
-    # 각 앱 사용 데이터 파일 처리
-    for app_usage_file in app_usage_files:  # 각 파일에 대해
-        # 파일명에서 주차 정보 추출 (예: "app_usage_data_0주차.csv" -> "0주차")
-        week_suffix_match = re.search(
-            r"app_usage_data_(.+?)\.csv", app_usage_file.name
-        )  # 주차 정보 추출
-        if week_suffix_match:  # 주차 정보가 있는 경우
-            week_suffix = week_suffix_match.group(1)  # 주차 정보 추출
-        else:  # 주차 정보가 없는 경우
-            week_suffix = "unknown"  # 알 수 없음으로 설정
+                # Store participant ID
+                valid_ids.add(participant_id)
 
-        # CSV 파일 읽기
-        try:  # 파일 읽기 시도
-            # 파일의 내용을 먼저 읽어서 헤더 구조 확인
-            with open(app_usage_file, "r", encoding="utf-8") as f:  # 파일 열기
-                lines = f.readlines()  # 모든 줄 읽기
+        print(f"Loaded {len(valid_ids)} valid participant IDs from {csv_file}")
+        return valid_ids
 
-            if len(lines) < 3:  # 파일이 비어있거나 너무 짧은 경우
-                print(
-                    f"{app_usage_file} 파일이 비어있거나 너무 짧습니다."
-                )  # 오류 메시지 출력
-                continue  # 다음 파일로 넘어가기
+    except Exception as e:
+        print(f"Error loading participant IDs: {e}")
+        return set()
 
-            # 두 번째 줄을 헤더로 사용 (첫 번째 줄은 큰 카테고리 헤더)
-            header_line = lines[1].strip()  # 두 번째 줄을 헤더로 사용
-            column_names = [
-                col.strip() for col in header_line.split(",")
-            ]  # 열 이름 추출
 
-            # '날짜 / 시간' 열을 'datetime'으로 변경
-            for i, name in enumerate(column_names):
-                if name == "날짜 / 시간":
-                    column_names[i] = "datetime"
+def get_time_range(dt):
+    """
+    Determine which time range a datetime falls into.
 
-            # CSV 파일 다시 읽기, 이번에는 두 번째 줄을 헤더로 사용하고 첫 두 줄은 건너뛰기
-            df = pd.read_csv(
-                app_usage_file,
-                encoding="utf-8",
-                header=None,  # 헤더 없음으로 읽기
-                skiprows=2,  # 첫 두 줄 건너뛰기
-                names=column_names,  # 직접 열 이름 지정
-            )  # CSV 파일 읽기
+    Args:
+        dt (datetime): The datetime object
 
-            # NaN 값을 빈 문자열로 대체
-            df = df.fillna("")  # NaN 값을 빈 문자열로 대체
+    Returns:
+        str: The time range label
+    """
+    # Extract the time component
+    t = dt.time()
 
-        except Exception as e:  # 오류 발생 시
-            print(f"{app_usage_file} 파일을 읽는 중 오류 발생: {e}")  # 오류 메시지 출력
-            continue  # 다음 파일로 넘어가기
+    # Define time ranges
+    if time(0, 0) <= t < time(9, 0):
+        return "00:00-9:00"
+    elif time(9, 0) <= t < time(10, 30):
+        return "9:00-10:30"
+    elif time(10, 30) <= t < time(12, 0):
+        return "10:30-12:00"
+    elif time(12, 0) <= t < time(13, 30):
+        return "12:00-13:30"
+    elif time(13, 30) <= t < time(15, 0):
+        return "13:30-15:00"
+    elif time(15, 0) <= t < time(16, 30):
+        return "15:00-16:30"
+    elif time(16, 30) <= t < time(18, 0):
+        return "16:30-18:00"
+    else:  # time(18, 0) <= t <= time(23, 59)
+        return "18:00-24:00"
 
-        # 데이터 처리
-        # 각 참가자별로 데이터 그룹화
-        for _, row in df.iterrows():  # 각 행에 대해
-            # 기본 정보 추출
-            name = row.get("성함", "Unknown")  # 이름 추출
-            team = row.get("콜센터 업종 (팀 소속)", "Unknown")  # 팀 추출
-            role = row.get("근무지 (직무)", "Unknown")  # 역할 추출
 
-            # 참가자가 아직 없는 경우 추가
-            if name not in all_participants:  # 참가자가 없는 경우
-                all_participants[name] = {  # 참가자 정보 추가
-                    "name": name,  # 이름
-                    "team": team,  # 팀
-                    "role": role,  # 역할
-                    "app_usage": {},  # 앱 사용 데이터
-                }
+def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
+    """
+    Analyze app usage data for the specified week.
 
-            # 참가자의 주차별 데이터 초기화
-            if (
-                week_suffix not in all_participants[name]["app_usage"]
-            ):  # 주차 데이터가 없는 경우
-                all_participants[name]["app_usage"][week_suffix] = (
-                    {  # 주차 데이터 초기화
-                        "records": [],  # 기록 목록
-                        "category_averages": {},  # 카테고리 평균
-                    }
-                )
+    Args:
+        week (int): Week number (e.g., 0 for "0주차")
+        csv_dir (str): Directory containing the app usage CSV file
+        output_dir (str): Directory to save the analysis output
 
-            # 앱 사용 데이터 레코드 생성
-            record = {  # 레코드 생성
-                "datetime": row.get("datetime", ""),  # 날짜/시간
-                "수면": row.get("수면", ""),  # 수면
-                "컨디션": row.get("컨디션", ""),  # 컨디션
-                "기분": row.get("기분", ""),  # 기분
-                "걱정": row.get("걱정", ""),  # 걱정
-                "선택한 감정": row.get("선택한 감정", ""),  # 선택한 감정
-                "선택한 요인": row.get("선택한 요인", ""),  # 선택한 요인
-                "마음 기록 입력 내용 (텍스트)": row.get(
-                    "마음 기록 입력 내용 (텍스트)", ""
-                ),  # 마음 기록 내용
-                "배터리 변동량 1": row.get("배터리 변동량 1", ""),  # 배터리 변동량 1
-                "감정 기록 후 배터리 값": row.get(
-                    "감정 기록 후 배터리 값", ""
-                ),  # 감정 기록 후 배터리 값
-                "중재 활동 이름": row.get("중재 활동 이름", ""),  # 중재 활동 이름
-                "배터리 변동량 2": row.get("배터리 변동량 2", ""),  # 배터리 변동량 2
-                "중재 활동 후 배터리 값": row.get(
-                    "중재 활동 후 배터리 값", ""
-                ),  # 중재 활동 후 배터리 값
-            }
+    Returns:
+        str: Path to the saved analysis file or None if no data was found
+    """
+    # Create the output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
 
-            # 레코드 추가
-            all_participants[name]["app_usage"][week_suffix]["records"].append(
-                record
-            )  # 레코드 추가
+    # Define week suffix for file names
+    week_suffix = f"{week}주차"
 
-        # 각 참가자의 주차별 평균 계산
-        for name, participant in all_participants.items():  # 각 참가자에 대해
-            if week_suffix in participant["app_usage"]:  # 주차 데이터가 있는 경우
-                records = participant["app_usage"][week_suffix][
-                    "records"
-                ]  # 레코드 목록 가져오기
+    # Define the app usage data file path
+    app_usage_file = os.path.join(csv_dir, f"app_usage_data_{week_suffix}.csv")
 
-                # 수치형 필드들에 대한 평균 계산
-                numeric_fields = [
-                    "수면",
-                    "컨디션",
-                    "기분",
-                    "걱정",
-                    "배터리 변동량 1",
-                    "감정 기록 후 배터리 값",
-                    "배터리 변동량 2",
-                    "중재 활동 후 배터리 값",
-                ]  # 수치형 필드
-                averages = {}  # 평균값 저장 딕셔너리
+    # Check if the app usage file exists
+    if not os.path.exists(app_usage_file):
+        print(f"App usage data file '{app_usage_file}' not found.")
+        return None
 
-                for field in numeric_fields:  # 각 필드에 대해
-                    values = []  # 값 목록 초기화
-                    for record in records:  # 각 레코드에 대해
-                        value = record[field]  # 값 가져오기
-                        # 값이 비어있지 않고 NaN이 아닌 경우에만 추가
-                        if (
-                            value != "" and value != "nan" and not pd.isna(value)
-                        ):  # 값이 있는 경우
-                            try:  # 값 변환 시도
-                                values.append(float(value))  # 값 추가
-                            except (ValueError, TypeError):  # 변환 실패 시
-                                pass  # 무시
+    # Load valid participant IDs
+    valid_ids = load_valid_ids()
 
-                    if values:  # 값이 있는 경우
-                        averages[field] = round(statistics.mean(values), 2)  # 평균 계산
-                    else:  # 값이 없는 경우
-                        averages[field] = None  # None으로 설정
+    if not valid_ids:
+        print("No valid participant IDs found. Analysis will be empty.")
 
-                # 감정 및 요인 분포 계산
-                emotion_counts = defaultdict(int)  # 감정 카운트
-                factor_counts = defaultdict(int)  # 요인 카운트
+    # Define positive and negative emotion categories
+    positive_emotions = [
+        "신나요",
+        "행복해요",
+        "만족스러워요",
+        "차분해요",
+    ]  # List of positive emotions
+    negative_emotions = [
+        "우울해요",
+        "슬퍼요",
+        "불안해요",
+        "화가나요",
+    ]  # List of negative emotions
 
-                for record in records:  # 각 레코드에 대해
-                    emotion = record["선택한 감정"]  # 감정 추출
-                    factor = record["선택한 요인"]  # 요인 추출
+    # Initialize dictionaries to store analysis results
+    daily_users = defaultdict(set)  # Dictionary to store unique users per day
+    daily_emotion_records = defaultdict(
+        int
+    )  # Dictionary to store emotion record counts per day
+    daily_factors_list = defaultdict(list)  # Dictionary to store factor lists per day
+    factor_counts = defaultdict(int)  # Dictionary to count occurrences of each factor
+    emotion_records_with_factors = []  # List to store all emotion records with factors
 
-                    if (
-                        emotion and not pd.isna(emotion) and emotion != "nan"
-                    ):  # 감정이 있는 경우
-                        emotion_counts[emotion] += 1  # 감정 카운트 증가
+    # Initialize emotion category counters
+    positive_emotion_count = 0  # Counter for positive emotions
+    negative_emotion_count = 0  # Counter for negative emotions
+    positive_factors = defaultdict(
+        int
+    )  # Dictionary to count factors in positive emotions
+    negative_factors = defaultdict(
+        int
+    )  # Dictionary to count factors in negative emotions
 
-                    if (
-                        factor and not pd.isna(factor) and factor != "nan"
-                    ):  # 요인이 있는 경우
-                        # 쉼표로 분리된 요인 처리
-                        if (
-                            isinstance(factor, str) and "," in factor
-                        ):  # 쉼표로 분리된 경우
-                            for f in factor.split(","):  # 각 요인에 대해
-                                f = f.strip()  # 공백 제거
-                                if f:  # 요인이 있는 경우
-                                    factor_counts[f] += 1  # 요인 카운트 증가
-                        else:  # 단일 요인인 경우
-                            factor_counts[factor] += 1  # 요인 카운트 증가
+    # Initialize daily emotion category counters
+    daily_emotion_categories = defaultdict(lambda: {"positive": 0, "negative": 0})
 
-                # 중재 활동 분포 계산
-                activity_counts = defaultdict(int)  # 활동 카운트
-                activity_effects = defaultdict(list)  # 활동 효과
+    # Initialize time range emotion category counters
+    time_range_emotion_categories = {
+        "00:00-9:00": {"positive": 0, "negative": 0},
+        "9:00-10:30": {"positive": 0, "negative": 0},
+        "10:30-12:00": {"positive": 0, "negative": 0},
+        "12:00-13:30": {"positive": 0, "negative": 0},
+        "13:30-15:00": {"positive": 0, "negative": 0},
+        "15:00-16:30": {"positive": 0, "negative": 0},
+        "16:30-18:00": {"positive": 0, "negative": 0},
+        "18:00-24:00": {"positive": 0, "negative": 0},
+    }
 
-                for record in records:  # 각 레코드에 대해
-                    activity = record["중재 활동 이름"]  # 활동 이름 추출
-                    change = record["배터리 변동량 2"]  # 배터리 변동량 추출
+    # Read the app usage data file
+    try:
+        with open(app_usage_file, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            # Iterate through each row in the CSV
+            for row in reader:
+                # Extract ID, date, and factors
+                user_id = row.get("ID", "").strip()
+                date_str = row.get("날짜 / 시간", "").strip()
+                factors_str = row.get("선택한 요인", "").strip()
+                emotion = row.get("선택한 감정", "").strip()
 
-                    if (
-                        activity
-                        and not pd.isna(activity)
-                        and activity != "nan"
-                        and change
-                        and not pd.isna(change)
-                        and change != "nan"
-                    ):  # 활동과 변동량이 있는 경우
-                        try:  # 값 변환 시도
-                            float_change = float(change)  # 값 변환
-                            activity_counts[activity] += 1  # 활동 카운트 증가
-                            activity_effects[activity].append(
-                                float_change
-                            )  # 활동 효과 추가
-                        except (ValueError, TypeError):  # 변환 실패 시
-                            pass  # 무시
+                # Skip rows with missing IDs or dates or if the ID is not in the valid IDs list
+                if not user_id or not date_str or user_id not in valid_ids:
+                    continue
 
-                # 평균, 분포 결과 저장
-                participant["app_usage"][week_suffix][
-                    "category_averages"
-                ] = averages  # 평균 저장
-                participant["app_usage"][week_suffix]["emotion_distribution"] = {
-                    k: v for k, v in emotion_counts.items()
-                }  # 감정 분포 저장
-                participant["app_usage"][week_suffix]["factor_distribution"] = {
-                    k: v for k, v in factor_counts.items()
-                }  # 요인 분포 저장
+                try:
+                    # Parse the date string to extract just the date part
+                    date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                    date = date_obj.strftime("%Y-%m-%d")
 
-                # 중재 활동 효과 저장
-                activity_analysis = {}  # 활동 분석
-                for activity, effects in activity_effects.items():  # 각 활동에 대해
-                    activity_analysis[activity] = {  # 활동 분석 저장
-                        "count": activity_counts[activity],  # 횟수
-                        "avg_effect": (
-                            round(statistics.mean(effects), 2) if effects else None
-                        ),  # 평균 효과
-                    }
+                    # Get time range for this record
+                    time_range = get_time_range(date_obj)
 
-                participant["app_usage"][week_suffix][
-                    "activity_analysis"
-                ] = activity_analysis  # 활동 분석 저장
+                    # Add user to daily users
+                    daily_users[date].add(user_id)
 
-    # 참가자 딕셔너리를 리스트로 변환
-    participants_list = list(all_participants.values())  # 참가자 리스트 생성
+                    # Increment emotion record count for the day
+                    daily_emotion_records[date] += 1
 
-    # 최종 분석 결과 생성
-    final_analysis = {"participants": participants_list}  # 최종 분석 결과
+                    # Process factors - split by semicolon if present
+                    factors = []
+                    if factors_str:
+                        # Split factors by semicolon and strip whitespace
+                        factors = [factor.strip() for factor in factors_str.split(";")]
 
-    # 분석 결과를 JSON 파일로 저장
-    output_file = os.path.join(output_dir, "app_analysis.json")  # 출력 파일 경로
-    with open(output_file, "w", encoding="utf-8") as f:  # 파일 열기
-        json.dump(final_analysis, f, ensure_ascii=False, indent=2)  # JSON으로 저장
+                        # Store factors as a list
+                        record = {
+                            "date": date,
+                            "user_id": user_id,
+                            "emotion": emotion,
+                            "factors": factors,
+                        }
+                        emotion_records_with_factors.append(record)
 
-    print(
-        f"앱 사용 데이터 분석이 완료되었고 {output_file}에 저장되었습니다"
-    )  # 성공 메시지 출력
-    return output_file  # 파일 경로 반환
+                        # Add factors to daily factors list
+                        daily_factors_list[date].append(factors)
+
+                        # Count occurrences of each factor
+                        for factor in factors:
+                            factor_counts[factor] += 1
+
+                            # Count factors by emotion category
+                            if emotion in positive_emotions:
+                                positive_factors[factor] += 1
+                            elif emotion in negative_emotions:
+                                negative_factors[factor] += 1
+
+                    # Count emotions by category
+                    if emotion in positive_emotions:
+                        positive_emotion_count += 1
+                        daily_emotion_categories[date]["positive"] += 1
+                        time_range_emotion_categories[time_range]["positive"] += 1
+                    elif emotion in negative_emotions:
+                        negative_emotion_count += 1
+                        daily_emotion_categories[date]["negative"] += 1
+                        time_range_emotion_categories[time_range]["negative"] += 1
+
+                except (ValueError, TypeError):
+                    # Skip rows with invalid date format
+                    continue
+
+        # Convert daily users from sets to counts
+        daily_user_counts = {date: len(users) for date, users in daily_users.items()}
+
+        # Sort factor counts by frequency (descending)
+        sorted_factor_counts = dict(
+            sorted(factor_counts.items(), key=lambda x: x[1], reverse=True)
+        )
+        sorted_positive_factors = dict(
+            sorted(positive_factors.items(), key=lambda x: x[1], reverse=True)
+        )
+        sorted_negative_factors = dict(
+            sorted(negative_factors.items(), key=lambda x: x[1], reverse=True)
+        )
+
+        # Prepare analysis results
+        analysis_results = {
+            "daily_user_counts": daily_user_counts,
+            "daily_emotion_records": daily_emotion_records,
+            "factor_counts": sorted_factor_counts,
+            "emotion_records": emotion_records_with_factors,
+            "total_users": len(
+                set().union(*daily_users.values()) if daily_users else set()
+            ),
+            "total_emotion_records": sum(daily_emotion_records.values()),
+            "total_factors": sum(factor_counts.values()),
+            "emotion_categories": {
+                "positive": {
+                    "count": positive_emotion_count,
+                    "emotions": positive_emotions,
+                    "factors": sorted_positive_factors,
+                },
+                "negative": {
+                    "count": negative_emotion_count,
+                    "emotions": negative_emotions,
+                    "factors": sorted_negative_factors,
+                },
+            },
+            "daily_emotion_categories": dict(daily_emotion_categories),
+            "time_range_emotion_categories": time_range_emotion_categories,
+        }
+
+        # Save the analysis results to a JSON file
+        output_file = os.path.join(output_dir, f"app_analysis_{week_suffix}.json")
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(analysis_results, f, ensure_ascii=False, indent=2)
+
+        print(
+            f"App usage analysis for week {week} completed and saved to {output_file}"
+        )
+        print(f"Total unique users: {analysis_results['total_users']}")
+        print(f"Total emotion records: {analysis_results['total_emotion_records']}")
+        print(f"Total factors: {analysis_results['total_factors']}")
+        print(f"Positive emotions: {positive_emotion_count}")
+        print(f"Negative emotions: {negative_emotion_count}")
+
+        return output_file
+
+    except Exception as e:
+        print(f"Error analyzing app usage data: {e}")
+        return None
 
 
 if __name__ == "__main__":
     """
-    스크립트가 직접 실행될 때 메인 함수 실행
+    Execute the analysis function when the script is run directly.
+
+    Example usage:
+    python src/analyze_app_usage.py
     """
-    analyze_app_usage()  # 앱 사용 데이터 분석 실행
+    analyze_app_usage(0)  # Analyze data for week 0 by default

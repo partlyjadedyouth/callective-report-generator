@@ -9,7 +9,7 @@ This script coordinates the process of:
 2. Saving the data as a CSV file
 3. Parsing the data to generate questionnaire results for multiple questionnaire types
 4. Analyzing the survey results and generating per-participant statistics across weeks
-5. Analyzing app usage data and generating app_analysis.json (using manually provided data)
+5. Analyzing app usage data for the specified week
 6. Generating personal reports for all participants
 7. Generating team figures for visualization
 8. Generating company-level summary figures
@@ -32,7 +32,7 @@ from parse_raw import (
 from analyze_results import analyze_results  # Import function for analyzing results
 from analyze_app_usage import (
     analyze_app_usage,
-)  # Import function for analyzing app usage data
+)  # Import function for analyzing app usage
 from generate_team_figures import (
     generate_bat_primary_distribution_graph,
     generate_exhaustion_distribution_graph,
@@ -166,12 +166,10 @@ def main():
         f"Participant analysis results saved to {analysis_file}"
     )  # Print success message
 
-    # Step 6: Analyze app usage data if available (now using manually provided data)
-    print(
-        "Analyzing app usage data (from manually provided files)..."
-    )  # Print status message
+    # Step 6: Analyze app usage data for the specified week
+    print(f"Analyzing app usage data for week {args.week}...")  # Print status message
     app_analysis_file = analyze_app_usage(  # Analyze app usage data
-        csv_dir=csv_dir, output_dir=analysis_dir
+        week=args.week, csv_dir=csv_dir, output_dir=analysis_dir
     )
 
     # Check if app usage analysis was successfully generated
