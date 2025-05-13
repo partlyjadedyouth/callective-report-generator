@@ -78,10 +78,10 @@ def get_time_range(dt):
     t = dt.time()
 
     # Define time ranges
-    if time(0, 0) <= t < time(9, 0):
-        return "00:00-9:00"
-    elif time(9, 0) <= t < time(10, 30):
-        return "9:00-10:30"
+    if time(0, 0) <= t < time(8, 0):
+        return "00:00-08:00"
+    elif time(8, 0) <= t < time(10, 30):
+        return "08:00-10:30"
     elif time(10, 30) <= t < time(12, 0):
         return "10:30-12:00"
     elif time(12, 0) <= t < time(13, 30):
@@ -90,10 +90,10 @@ def get_time_range(dt):
         return "13:30-15:00"
     elif time(15, 0) <= t < time(16, 30):
         return "15:00-16:30"
-    elif time(16, 30) <= t < time(18, 0):
-        return "16:30-18:00"
-    else:  # time(18, 0) <= t <= time(23, 59)
-        return "18:00-24:00"
+    elif time(16, 30) <= t < time(19, 0):
+        return "16:30-19:00"
+    else:  # time(19, 0) <= t <= time(23, 59)
+        return "19:00-24:00"
 
 
 def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
@@ -166,14 +166,93 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
 
     # Initialize time range emotion category counters
     time_range_emotion_categories = {
-        "00:00-9:00": {"positive": 0, "negative": 0},
-        "9:00-10:30": {"positive": 0, "negative": 0},
+        "00:00-08:00": {"positive": 0, "negative": 0},
+        "08:00-10:30": {"positive": 0, "negative": 0},
         "10:30-12:00": {"positive": 0, "negative": 0},
         "12:00-13:30": {"positive": 0, "negative": 0},
         "13:30-15:00": {"positive": 0, "negative": 0},
         "15:00-16:30": {"positive": 0, "negative": 0},
-        "16:30-18:00": {"positive": 0, "negative": 0},
-        "18:00-24:00": {"positive": 0, "negative": 0},
+        "16:30-19:00": {"positive": 0, "negative": 0},
+        "19:00-24:00": {"positive": 0, "negative": 0},
+    }
+
+    # Initialize detailed emotion categories per time range
+    time_range_detailed_emotions = {
+        "00:00-08:00": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "08:00-10:30": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "10:30-12:00": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "12:00-13:30": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "13:30-15:00": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "15:00-16:30": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "16:30-19:00": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "19:00-24:00": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+    }
+
+    # Initialize day of week emotion categories
+    day_of_week_emotion_categories = {
+        "Monday": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "Tuesday": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "Wednesday": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "Thursday": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "Friday": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "Saturday": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+        "Sunday": {
+            "positive": {"count": 0, "factors": defaultdict(int)},
+            "negative": {"count": 0, "factors": defaultdict(int)},
+        },
+    }
+
+    # Korean day of week names mapping
+    korean_day_names = {
+        "Monday": "월요일",
+        "Tuesday": "화요일",
+        "Wednesday": "수요일",
+        "Thursday": "목요일",
+        "Friday": "금요일",
+        "Saturday": "토요일",
+        "Sunday": "일요일",
     }
 
     # Read the app usage data file
@@ -196,6 +275,11 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
                     # Parse the date string to extract just the date part
                     date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
                     date = date_obj.strftime("%Y-%m-%d")
+
+                    # Get day of week
+                    day_of_week = date_obj.strftime(
+                        "%A"
+                    )  # Returns full name: Monday, Tuesday, etc.
 
                     # Get time range for this record
                     time_range = get_time_range(date_obj)
@@ -239,10 +323,41 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
                         positive_emotion_count += 1
                         daily_emotion_categories[date]["positive"] += 1
                         time_range_emotion_categories[time_range]["positive"] += 1
+                        time_range_detailed_emotions[time_range]["positive"][
+                            "count"
+                        ] += 1
+                        day_of_week_emotion_categories[day_of_week]["positive"][
+                            "count"
+                        ] += 1
+
+                        # Count factors for this time range
+                        for factor in factors:
+                            time_range_detailed_emotions[time_range]["positive"][
+                                "factors"
+                            ][factor] += 1
+                            day_of_week_emotion_categories[day_of_week]["positive"][
+                                "factors"
+                            ][factor] += 1
+
                     elif emotion in negative_emotions:
                         negative_emotion_count += 1
                         daily_emotion_categories[date]["negative"] += 1
                         time_range_emotion_categories[time_range]["negative"] += 1
+                        time_range_detailed_emotions[time_range]["negative"][
+                            "count"
+                        ] += 1
+                        day_of_week_emotion_categories[day_of_week]["negative"][
+                            "count"
+                        ] += 1
+
+                        # Count factors for this time range
+                        for factor in factors:
+                            time_range_detailed_emotions[time_range]["negative"][
+                                "factors"
+                            ][factor] += 1
+                            day_of_week_emotion_categories[day_of_week]["negative"][
+                                "factors"
+                            ][factor] += 1
 
                 except (ValueError, TypeError):
                     # Skip rows with invalid date format
@@ -261,6 +376,46 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
         sorted_negative_factors = dict(
             sorted(negative_factors.items(), key=lambda x: x[1], reverse=True)
         )
+
+        # Convert defaultdicts to regular dicts and sort factors by frequency
+        for time_range in time_range_detailed_emotions:
+            for category in ["positive", "negative"]:
+                # Convert defaultdict to regular dict and sort
+                factors_dict = dict(
+                    time_range_detailed_emotions[time_range][category]["factors"]
+                )
+                time_range_detailed_emotions[time_range][category]["factors"] = dict(
+                    sorted(factors_dict.items(), key=lambda x: x[1], reverse=True)
+                )
+                # Add emotions list
+                time_range_detailed_emotions[time_range][category]["emotions"] = (
+                    positive_emotions if category == "positive" else negative_emotions
+                )
+
+        # Convert day of week defaultdicts to regular dicts and sort factors by frequency
+        day_of_week_emotion_categories_korean = {}
+        for day in day_of_week_emotion_categories:
+            korean_day = korean_day_names[day]
+            day_of_week_emotion_categories_korean[korean_day] = {}
+
+            for category in ["positive", "negative"]:
+                day_of_week_emotion_categories_korean[korean_day][category] = {
+                    "count": day_of_week_emotion_categories[day][category]["count"],
+                    "emotions": (
+                        positive_emotions
+                        if category == "positive"
+                        else negative_emotions
+                    ),
+                    "factors": dict(
+                        sorted(
+                            dict(
+                                day_of_week_emotion_categories[day][category]["factors"]
+                            ).items(),
+                            key=lambda x: x[1],
+                            reverse=True,
+                        )
+                    ),
+                }
 
         # Prepare analysis results
         analysis_results = {
@@ -287,6 +442,8 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
             },
             "daily_emotion_categories": dict(daily_emotion_categories),
             "time_range_emotion_categories": time_range_emotion_categories,
+            "time_range_detailed_emotions": dict(time_range_detailed_emotions),
+            "day_of_week_emotion_categories": day_of_week_emotion_categories_korean,
         }
 
         # Save the analysis results to a JSON file
