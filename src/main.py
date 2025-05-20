@@ -75,6 +75,11 @@ def main():
         default=0,  # Add argument for week number with default value of 0
         help="Week number to use in file names (e.g., 0 for '0주차')",
     )
+    parser.add_argument(
+        "--no-report",
+        action="store_true",  # Add argument to skip personal report generation
+        help="Skip personal report generation",
+    )
 
     # Parse the command-line arguments
     args = parser.parse_args()  # Parse arguments
@@ -195,162 +200,161 @@ def main():
         success_message += f", app usage analysis to {app_analysis_file}"
     print(success_message)  # Print success message
 
-    # Step 7: Generate personal reports
-    print("Generating personal reports...")  # Print status message
-    try:
-        # Define the path to the personal report generator script
-        personal_report_script = (
-            "src/personal_report_generator.py"  # Path to the script
-        )
-        # Execute the personal report generator script
-        subprocess.run(
-            ["python3", personal_report_script], check=True
-        )  # Run the script using python3 and check for errors
-        print(f"Successfully generated personal reports.")  # Print success message
-
-        # Step 8: Generate team figures
-        print("Generating team figures...")  # Print status message
-
-        # Load analysis data to determine teams
-        with open(analysis_file, "r", encoding="utf-8") as f:  # Open analysis file
-            analysis_data = json.load(f)  # Load JSON data
-
-        # Extract all unique team numbers
-        team_numbers = set()  # Initialize empty set for team numbers
-        for participant in analysis_data[
-            "participants"
-        ]:  # Iterate through each participant
-            team_name = participant["team"]  # Get team name
-            if team_name.startswith("상담 ") and team_name.endswith(
-                "팀"
-            ):  # Check if team name has expected format
-                try:
-                    # Extract team number from the team name (e.g., "상담 1팀" -> 1)
-                    team_number = int(team_name[3:-1])  # Extract and convert to integer
-                    team_numbers.add(team_number)  # Add to set of team numbers
-                except (
-                    ValueError
-                ):  # Handle case where team number isn't a valid integer
-                    pass  # Skip this team
-
-        # Generate figures for all teams
-        for team_number in sorted(
-            team_numbers
-        ):  # Iterate through team numbers in order
-            try:
-                print(
-                    f"Generating figures for team {team_number}..."
-                )  # Print progress message
-                # Generate BAT primary distribution graph
-                generate_bat_primary_distribution_graph(
-                    args.week, team_number
-                )  # Generate BAT primary figures for this team
-                # Generate exhaustion distribution graph
-                generate_exhaustion_distribution_graph(
-                    args.week, team_number
-                )  # Generate exhaustion figures for this team
-                # Generate cognitive regulation distribution graph
-                generate_cognitive_regulation_distribution_graph(
-                    args.week, team_number
-                )  # Generate cognitive regulation figures for this team
-                # Generate emotional regulation distribution graph
-                generate_emotional_regulation_distribution_graph(
-                    args.week, team_number
-                )  # Generate emotional regulation figures for this team
-                # Generate depersonalization distribution graph
-                generate_depersonalization_distribution_graph(
-                    args.week, team_number
-                )  # Generate depersonalization figures for this team
-                # Generate stress distribution graph
-                generate_stress_distribution_graph(
-                    args.week, team_number
-                )  # Generate stress figures for this team
-                # Generate stress subcategories boxplot
-                generate_stress_subcategories_boxplot(
-                    args.week, team_number
-                )  # Generate stress subcategories boxplot for this team
-                # Generate emotional labor subcategories boxplot
-                generate_emotional_labor_subcategories_boxplot(
-                    args.week, team_number
-                )  # Generate emotional labor subcategories boxplot for this team
-            except Exception as e:  # Catch any errors that occur
-                print(
-                    f"Error generating figures for team {team_number}: {e}"
-                )  # Print error message
-
-        # Step 9: Generate company-level summary figures
-        print("Generating company-level summary figures...")  # Print status message
+    # Step 7: Generate personal reports if --no-report is not specified
+    if not args.no_report:  # Check if report generation should be skipped
+        print("Generating personal reports...")  # Print status message
         try:
-            # Generate burnout summary table
-            generate_burnout_summary_table(
-                args.week
-            )  # Generate company-level burnout summary
-
-            # Generate stress summary table
-            generate_stress_summary_table(
-                args.week
-            )  # Generate company-level stress summary
-
-            # Generate emotional labor summary table
-            generate_emotional_labor_summary_table(
-                args.week
-            )  # Generate company-level emotional labor summary
-
+            # Define the path to the personal report generator script
+            personal_report_script = (
+                "src/personal_report_generator.py"  # Path to the script
+            )
+            # Execute the personal report generator script
+            subprocess.run(
+                ["python3", personal_report_script], check=True
+            )  # Run the script using python3 and check for errors
+            print(f"Successfully generated personal reports.")  # Print success message
+        except (
+            subprocess.CalledProcessError
+        ) as e:  # Catch errors during script execution
+            print(f"Failed to generate personal reports: {e}")  # Print error message
+            return 1  # Return error code
+        except FileNotFoundError:  # Catch error if script not found
             print(
-                "Successfully generated company-level summary figures."
-            )  # Print success message
+                f"Error: The script {personal_report_script} was not found."
+            )  # Print file not found error
+            return 1  # Return error code
+    else:
+        print("Skipping personal report generation as requested.")  # Print skip message
+
+    # Step 8: Generate team figures
+    print("Generating team figures...")  # Print status message
+
+    # Load analysis data to determine teams
+    with open(analysis_file, "r", encoding="utf-8") as f:  # Open analysis file
+        analysis_data = json.load(f)  # Load JSON data
+
+    # Extract all unique team numbers
+    team_numbers = set()  # Initialize empty set for team numbers
+    for participant in analysis_data[
+        "participants"
+    ]:  # Iterate through each participant
+        team_name = participant["team"]  # Get team name
+        if team_name.startswith("상담 ") and team_name.endswith(
+            "팀"
+        ):  # Check if team name has expected format
+            try:
+                # Extract team number from the team name (e.g., "상담 1팀" -> 1)
+                team_number = int(team_name[3:-1])  # Extract and convert to integer
+                team_numbers.add(team_number)  # Add to set of team numbers
+            except ValueError:  # Handle case where team number isn't a valid integer
+                pass  # Skip this team
+
+    # Generate figures for all teams
+    for team_number in sorted(team_numbers):  # Iterate through team numbers in order
+        try:
+            print(
+                f"Generating figures for team {team_number}..."
+            )  # Print progress message
+            # Generate BAT primary distribution graph
+            generate_bat_primary_distribution_graph(
+                args.week, team_number
+            )  # Generate BAT primary figures for this team
+            # Generate exhaustion distribution graph
+            generate_exhaustion_distribution_graph(
+                args.week, team_number
+            )  # Generate exhaustion figures for this team
+            # Generate cognitive regulation distribution graph
+            generate_cognitive_regulation_distribution_graph(
+                args.week, team_number
+            )  # Generate cognitive regulation figures for this team
+            # Generate emotional regulation distribution graph
+            generate_emotional_regulation_distribution_graph(
+                args.week, team_number
+            )  # Generate emotional regulation figures for this team
+            # Generate depersonalization distribution graph
+            generate_depersonalization_distribution_graph(
+                args.week, team_number
+            )  # Generate depersonalization figures for this team
+            # Generate stress distribution graph
+            generate_stress_distribution_graph(
+                args.week, team_number
+            )  # Generate stress figures for this team
+            # Generate stress subcategories boxplot
+            generate_stress_subcategories_boxplot(
+                args.week, team_number
+            )  # Generate stress subcategories boxplot for this team
+            # Generate emotional labor subcategories boxplot
+            generate_emotional_labor_subcategories_boxplot(
+                args.week, team_number
+            )  # Generate emotional labor subcategories boxplot for this team
         except Exception as e:  # Catch any errors that occur
             print(
-                f"Error generating company-level summary figures: {e}"
+                f"Error generating figures for team {team_number}: {e}"
             )  # Print error message
 
-        # Step 10: Generate app usage figures
-        if (
-            app_analysis_file
-        ):  # Only generate app usage figures if app usage analysis exists
-            print("Generating app usage figures...")  # Print status message
-            try:
-                # Generate app usage by date graph
-                generate_app_usage_by_date_graph(
-                    args.week
-                )  # Generate daily app usage graph
+    # Step 9: Generate company-level summary figures
+    print("Generating company-level summary figures...")  # Print status message
+    try:
+        # Generate burnout summary table
+        generate_burnout_summary_table(
+            args.week
+        )  # Generate company-level burnout summary
 
-                # Generate emotion records by date graph
-                generate_emotion_records_by_date_graph(
-                    args.week
-                )  # Generate daily emotion records graph
+        # Generate stress summary table
+        generate_stress_summary_table(
+            args.week
+        )  # Generate company-level stress summary
 
-                # Generate emotion distribution pie chart
-                generate_emotion_distribution_pie_chart(
-                    args.week
-                )  # Generate emotion distribution pie chart
+        # Generate emotional labor summary table
+        generate_emotional_labor_summary_table(
+            args.week
+        )  # Generate company-level emotional labor summary
 
-                # Generate weekday emotion distribution graph
-                generate_weekday_emotion_distribution_graph(
-                    args.week
-                )  # Generate weekday emotion distribution graph
-
-                # Generate timerange emotion distribution graph
-                generate_timerange_emotion_distribution_graph(
-                    args.week
-                )  # Generate timerange emotion distribution graph
-
-                print(
-                    "Successfully generated app usage figures."
-                )  # Print success message
-            except Exception as e:  # Catch any errors that occur
-                print(f"Error generating app usage figures: {e}")  # Print error message
-
-        print("Successfully generated all figures.")  # Print success message
-        return 0  # Return success code
-    except subprocess.CalledProcessError as e:  # Catch errors during script execution
-        print(f"Failed to generate personal reports: {e}")  # Print error message
-        return 1  # Return error code
-    except FileNotFoundError:  # Catch error if script not found
         print(
-            f"Error: The script {personal_report_script} was not found."
-        )  # Print file not found error
-        return 1  # Return error code
+            "Successfully generated company-level summary figures."
+        )  # Print success message
+    except Exception as e:  # Catch any errors that occur
+        print(
+            f"Error generating company-level summary figures: {e}"
+        )  # Print error message
+
+    # Step 10: Generate app usage figures
+    if (
+        app_analysis_file
+    ):  # Only generate app usage figures if app usage analysis exists
+        print("Generating app usage figures...")  # Print status message
+        try:
+            # Generate app usage by date graph
+            generate_app_usage_by_date_graph(
+                args.week
+            )  # Generate daily app usage graph
+
+            # Generate emotion records by date graph
+            generate_emotion_records_by_date_graph(
+                args.week
+            )  # Generate daily emotion records graph
+
+            # Generate emotion distribution pie chart
+            generate_emotion_distribution_pie_chart(
+                args.week
+            )  # Generate emotion distribution pie chart
+
+            # Generate weekday emotion distribution graph
+            generate_weekday_emotion_distribution_graph(
+                args.week
+            )  # Generate weekday emotion distribution graph
+
+            # Generate timerange emotion distribution graph
+            generate_timerange_emotion_distribution_graph(
+                args.week
+            )  # Generate timerange emotion distribution graph
+
+            print("Successfully generated app usage figures.")  # Print success message
+        except Exception as e:  # Catch any errors that occur
+            print(f"Error generating app usage figures: {e}")  # Print error message
+
+    print("Successfully generated all figures.")  # Print success message
+    return 0  # Return success code
 
 
 if __name__ == "__main__":

@@ -1125,20 +1125,21 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
         labels=reversed_subcategories_english,  # Use reversed English subcategory names as labels
     )
 
-    # Calculate medians for each subcategory
+    # Calculate means and medians for each subcategory
+    means = [np.mean(data) if len(data) > 0 else 0 for data in box_data]
     medians = [np.median(data) if len(data) > 0 else 0 for data in box_data]
 
-    # Choose colors based on median values and cutoff values
+    # Choose colors based on mean values and cutoff values
     box_colors = []
     for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
-        median = medians[i]
+        mean_val = means[i]  # Use mean instead of median for color determination
         cutoff = cutoff_map[subcat]
 
-        # Determine color based on median value compared to cutoffs
-        if median < cutoff[0]:
+        # Determine color based on mean value compared to cutoffs
+        if mean_val < cutoff[0]:
             # Normal range (green)
             box_colors.append("lightgreen")
-        elif median < cutoff[1]:
+        elif mean_val < cutoff[1]:
             # Warning range (orange)
             box_colors.append("orange")
         else:
@@ -1161,13 +1162,13 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
     # Set x-axis limits to 0-100 for stress scores
     plt.xlim(0, 100)
 
-    # Add text with median values and cutoffs
+    # Add text with mean, median values and cutoffs
     for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
         cutoff = cutoff_map[subcat]
         plt.text(
             95,
             i + 1,
-            f"Median: {medians[i]:.1f}\nCutoffs: {cutoff[0]}/{cutoff[1]}",
+            f"Mean: {means[i]:.1f}, Median: {medians[i]:.1f}\nCutoffs: {cutoff[0]}/{cutoff[1]}",
             verticalalignment="center",
             fontsize=9,
         )
@@ -1282,18 +1283,19 @@ def generate_emotional_labor_subcategories_boxplot(week_number=0, team_number=No
         labels=reversed_subcategories_english,  # Use reversed English subcategory names as labels
     )
 
-    # Calculate medians for each subcategory
+    # Calculate means and medians for each subcategory
+    means = [np.mean(data) if len(data) > 0 else 0 for data in box_data]
     medians = [np.median(data) if len(data) > 0 else 0 for data in box_data]
 
-    # Choose colors based on median values and cutoff values
+    # Choose colors based on mean values and cutoff values
     box_colors = []
     for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
-        median = medians[i]
+        mean_val = means[i]  # Use mean instead of median for color determination
         cutoff = cutoff_map[subcat]
 
-        # Determine color based on median value compared to cutoff
+        # Determine color based on mean value compared to cutoff
         # Only two levels: normal and high risk
-        if median < cutoff:
+        if mean_val < cutoff:
             # Normal range (green)
             box_colors.append("lightgreen")
         else:
@@ -1317,13 +1319,13 @@ def generate_emotional_labor_subcategories_boxplot(week_number=0, team_number=No
     # Set x-axis limits to 0-100 for emotional labor scores
     plt.xlim(0, 100)
 
-    # Add text with median values and cutoffs
+    # Add text with mean, median values and cutoffs
     for i, subcat in enumerate(reversed_subcategories):  # Use reversed subcategories
         cutoff = cutoff_map[subcat]
         plt.text(
             95,
             i + 1,
-            f"Median: {medians[i]:.1f}\nCutoff: {cutoff}",
+            f"Mean: {means[i]:.1f}, Median: {medians[i]:.1f}\nCutoff: {cutoff}",
             verticalalignment="center",
             fontsize=9,
         )
@@ -2742,7 +2744,7 @@ def generate_timerange_emotion_distribution_graph(week_number=0):
 
     # Time ranges in the order they should appear on the x-axis
     ordered_time_ranges = [
-        "8:00-10:30",
+        "08:00-10:30",
         "10:30-12:00",
         "12:00-13:30",
         "13:30-15:00",
