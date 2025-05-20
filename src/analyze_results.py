@@ -24,6 +24,7 @@ from pathlib import Path  # Library for handling file paths
 from cutoff_values import (
     CUTOFF_BURNOUT_PRIMARY,
     CUTOFF_STRESS,  # Import cutoff values for stress risk assessment
+    CUTOFF_STRESS_MALE,  # Import male cutoff values for stress risk assessment
 )  # Import cutoff values for burnout risk assessment
 
 
@@ -406,6 +407,7 @@ def generate_group_analysis(all_participants):
             for participant_data in filtered_participants.values():
                 if week in participant_data["analysis"]:
                     participant_week_data = participant_data["analysis"][week]
+                    gender = participant_data.get("gender", "")
 
                     # Collect category averages
                     for category, value in participant_week_data[
@@ -423,11 +425,17 @@ def generate_group_analysis(all_participants):
                                 else:
                                     bat_primary_risk_counts["위험"] += 1
 
-                            # Count stress risk levels
+                            # Count stress risk levels based on gender
                             elif category == "stress":
-                                if value <= CUTOFF_STRESS[0]:
+                                # Use male cutoff for male participants, female cutoff for others
+                                cutoff = (
+                                    CUTOFF_STRESS_MALE
+                                    if gender == "남"
+                                    else CUTOFF_STRESS
+                                )
+                                if value <= cutoff[0]:
                                     stress_risk_counts["정상"] += 1
-                                elif value <= CUTOFF_STRESS[1]:
+                                elif value <= cutoff[1]:
                                     stress_risk_counts["준위험"] += 1
                                 else:
                                     stress_risk_counts["위험"] += 1

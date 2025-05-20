@@ -13,14 +13,23 @@ from cutoff_values import (
     CUTOFF_BURNOUT_EMOTIONAL_REGULATION,
     CUTOFF_BURNOUT_SECONDARY,
     CUTOFF_STRESS,
+    CUTOFF_STRESS_MALE,
     CUTOFF_EMOTIONAL_LABOR,
+    CUTOFF_EMOTIONAL_LABOR_MALE,
     CUTOFF_JOB_DEMAND,
+    CUTOFF_JOB_DEMAND_MALE,
     CUTOFF_INSUFFICIENT_JOB_CONTROL,
+    CUTOFF_INSUFFICIENT_JOB_CONTROL_MALE,
     CUTOFF_INTERPERSONAL_CONFLICT,
+    CUTOFF_INTERPERSONAL_CONFLICT_MALE,
     CUTOFF_JOB_INSECURITY,
+    CUTOFF_JOB_INSECURITY_MALE,
     CUTOFF_ORGANIZATIONAL_SYSTEM,
+    CUTOFF_ORGANIZATIONAL_SYSTEM_MALE,
     CUTOFF_LACK_OF_REWARD,
+    CUTOFF_LACK_OF_REWARD_MALE,
     CUTOFF_OCCUPATIONAL_CLIMATE,
+    CUTOFF_OCCUPATIONAL_CLIMATE_MALE,
 )
 
 # 파일 저장 전 디렉토리 경로 확인 및 생성
@@ -52,16 +61,6 @@ env = Environment(loader=FileSystemLoader("templates/"))
 # 템플릿 파일 로드
 template = env.get_template("personal_template.html")
 
-# cutoff_values.py에서 가져온 절단점을 변수에 할당
-cutoff_burnout_primary = CUTOFF_BURNOUT_PRIMARY
-cutoff_burnout_exhaustion = CUTOFF_BURNOUT_EXHAUSTION
-cutoff_burnout_depersonalization = CUTOFF_BURNOUT_DEPERSONALIZATION
-cutoff_burnout_cognitive_regulation = CUTOFF_BURNOUT_COGNITIVE_REGULATION
-cutoff_burnout_emotional_regulation = CUTOFF_BURNOUT_EMOTIONAL_REGULATION
-cutoff_burnout_secondary = CUTOFF_BURNOUT_SECONDARY
-cutoff_stress = CUTOFF_STRESS
-cutoff_emotional_labor = CUTOFF_EMOTIONAL_LABOR
-
 # 각 참여자에 대해 반복 수행
 participants = analysis_data["participants"]
 
@@ -71,6 +70,48 @@ for participant in participants:
     team = participant["team"]
     role = participant["role"]
     week = (len(participant["analysis"]) - 1) * 2
+
+    # 참여자의 성별 확인 (기본값은 여성)
+    gender = participant.get("gender", "여성")
+    is_male = gender == "남성"  # 한국어 성별 표기 사용 ("남성" vs "여성")
+
+    # 성별에 맞는 절단점 선택
+    # 번아웃 관련 절단점은 성별 차이가 없으므로 그대로 사용
+    cutoff_burnout_primary = CUTOFF_BURNOUT_PRIMARY
+    cutoff_burnout_exhaustion = CUTOFF_BURNOUT_EXHAUSTION
+    cutoff_burnout_depersonalization = CUTOFF_BURNOUT_DEPERSONALIZATION
+    cutoff_burnout_cognitive_regulation = CUTOFF_BURNOUT_COGNITIVE_REGULATION
+    cutoff_burnout_emotional_regulation = CUTOFF_BURNOUT_EMOTIONAL_REGULATION
+    cutoff_burnout_secondary = CUTOFF_BURNOUT_SECONDARY
+
+    # 성별에 따라 다른 절단점 적용
+    cutoff_stress = CUTOFF_STRESS_MALE if is_male else CUTOFF_STRESS
+    cutoff_emotional_labor = (
+        CUTOFF_EMOTIONAL_LABOR_MALE if is_male else CUTOFF_EMOTIONAL_LABOR
+    )
+
+    # 직무 스트레스 요인 절단점 (성별에 따라 다름)
+    cutoff_job_demand = CUTOFF_JOB_DEMAND_MALE if is_male else CUTOFF_JOB_DEMAND
+    cutoff_insufficient_job_control = (
+        CUTOFF_INSUFFICIENT_JOB_CONTROL_MALE
+        if is_male
+        else CUTOFF_INSUFFICIENT_JOB_CONTROL
+    )
+    cutoff_interpersonal_conflict = (
+        CUTOFF_INTERPERSONAL_CONFLICT_MALE if is_male else CUTOFF_INTERPERSONAL_CONFLICT
+    )
+    cutoff_job_insecurity = (
+        CUTOFF_JOB_INSECURITY_MALE if is_male else CUTOFF_JOB_INSECURITY
+    )
+    cutoff_organizational_system = (
+        CUTOFF_ORGANIZATIONAL_SYSTEM_MALE if is_male else CUTOFF_ORGANIZATIONAL_SYSTEM
+    )
+    cutoff_lack_of_reward = (
+        CUTOFF_LACK_OF_REWARD_MALE if is_male else CUTOFF_LACK_OF_REWARD
+    )
+    cutoff_occupational_climate = (
+        CUTOFF_OCCUPATIONAL_CLIMATE_MALE if is_male else CUTOFF_OCCUPATIONAL_CLIMATE
+    )
 
     # 해당 참여자의 심리검사 점수
     burnout_primary_this_week = participant["analysis"][f"{week}주차"][
@@ -162,6 +203,7 @@ for participant in participants:
         "team": team,
         "role": role,
         "week": week,
+        "gender": gender,
         "cutoff_burnout_primary": cutoff_burnout_primary,
         "cutoff_burnout_secondary": cutoff_burnout_secondary,
         "cutoff_burnout_exhaustion": cutoff_burnout_exhaustion,
@@ -170,6 +212,13 @@ for participant in participants:
         "cutoff_burnout_emotional_regulation": cutoff_burnout_emotional_regulation,
         "cutoff_stress": cutoff_stress,
         "cutoff_emotional_labor": cutoff_emotional_labor,
+        "cutoff_job_demand": cutoff_job_demand,
+        "cutoff_insufficient_job_control": cutoff_insufficient_job_control,
+        "cutoff_interpersonal_conflict": cutoff_interpersonal_conflict,
+        "cutoff_job_insecurity": cutoff_job_insecurity,
+        "cutoff_organizational_system": cutoff_organizational_system,
+        "cutoff_lack_of_reward": cutoff_lack_of_reward,
+        "cutoff_occupational_climate": cutoff_occupational_climate,
         "burnout_primary_this_week": burnout_primary_this_week,
         "burnout_secondary_this_week": burnout_secondary_this_week,
         "burnout_exhaustion_this_week": burnout_exhaustion_this_week,
@@ -189,6 +238,19 @@ for participant in participants:
         "company_stress_this_week": company_stress_this_week,
         "company_emotional_labor_this_week": company_emotional_labor_this_week,
         "participant": participant,
+        "el_categories": [
+            {
+                "key": "감정조절의 노력 및 다양성",
+                "cutoff_val": cutoff_emotional_labor[0],
+            },
+            {
+                "key": "고객응대의 과부하 및 갈등",
+                "cutoff_val": cutoff_emotional_labor[1],
+            },
+            {"key": "감정부조화 및 손상", "cutoff_val": cutoff_emotional_labor[2]},
+            {"key": "조직의 감시 및 모니터링", "cutoff_val": cutoff_emotional_labor[3]},
+            {"key": "조직의 지지 및 보호체계", "cutoff_val": cutoff_emotional_labor[4]},
+        ],
     }
 
     # Jinja2 템플릿을 사용하여 HTML 리포트 생성

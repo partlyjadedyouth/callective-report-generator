@@ -22,15 +22,27 @@ from cutoff_values import (
     CUTOFF_BURNOUT_COGNITIVE_REGULATION,
     CUTOFF_BURNOUT_EMOTIONAL_REGULATION,
     CUTOFF_STRESS,
+    CUTOFF_STRESS_MALE,
     CUTOFF_JOB_DEMAND,
+    CUTOFF_JOB_DEMAND_MALE,
     CUTOFF_INSUFFICIENT_JOB_CONTROL,
+    CUTOFF_INSUFFICIENT_JOB_CONTROL_MALE,
     CUTOFF_INTERPERSONAL_CONFLICT,
+    CUTOFF_INTERPERSONAL_CONFLICT_MALE,
     CUTOFF_JOB_INSECURITY,
+    CUTOFF_JOB_INSECURITY_MALE,
     CUTOFF_ORGANIZATIONAL_SYSTEM,
+    CUTOFF_ORGANIZATIONAL_SYSTEM_MALE,
     CUTOFF_LACK_OF_REWARD,
+    CUTOFF_LACK_OF_REWARD_MALE,
     CUTOFF_OCCUPATIONAL_CLIMATE,
+    CUTOFF_OCCUPATIONAL_CLIMATE_MALE,
     CUTOFF_EMOTIONAL_LABOR,
+    CUTOFF_EMOTIONAL_LABOR_MALE,
 )
+
+# 주의: 팀 분석에서는 여성 절단점만 사용
+# Team figures only use female cutoffs
 
 
 def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
@@ -895,7 +907,8 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
         analysis_data = json.load(f)
 
     # 외부 모듈에서 가져온 절단점 사용
-    cutoff_stress = CUTOFF_STRESS
+    # 팀 그래프에서는 여성 절단점만 사용 (For team graphs, use female cutoff values only)
+    cutoff_stress = CUTOFF_STRESS  # Female cutoffs only for team figures
 
     # Collect stress scores for the specified week
     all_scores = []  # List to store scores from all participants
@@ -1069,14 +1082,15 @@ def generate_stress_subcategories_boxplot(week_number=0, team_number=None):
     korean_to_english = {k: v for k, v in zip(subcategories, subcategories_english)}
 
     # Map subcategories to their cutoff values
+    # 팀 그래프에서는 여성 절단점만 사용 (For team graphs, use female cutoff values only)
     cutoff_map = {
-        "직무 요구": CUTOFF_JOB_DEMAND,
-        "직무 자율": CUTOFF_INSUFFICIENT_JOB_CONTROL,
-        "관계 갈등": CUTOFF_INTERPERSONAL_CONFLICT,
-        "직무 불안": CUTOFF_JOB_INSECURITY,
-        "조직 체계": CUTOFF_ORGANIZATIONAL_SYSTEM,
-        "보상 부적절": CUTOFF_LACK_OF_REWARD,
-        "직장 문화": CUTOFF_OCCUPATIONAL_CLIMATE,
+        "직무 요구": CUTOFF_JOB_DEMAND,  # Female cutoffs
+        "직무 자율": CUTOFF_INSUFFICIENT_JOB_CONTROL,  # Female cutoffs
+        "관계 갈등": CUTOFF_INTERPERSONAL_CONFLICT,  # Female cutoffs
+        "직무 불안": CUTOFF_JOB_INSECURITY,  # Female cutoffs
+        "조직 체계": CUTOFF_ORGANIZATIONAL_SYSTEM,  # Female cutoffs
+        "보상 부적절": CUTOFF_LACK_OF_REWARD,  # Female cutoffs
+        "직장 문화": CUTOFF_OCCUPATIONAL_CLIMATE,  # Female cutoffs
     }
 
     # Data structure to hold values for each subcategory
@@ -1230,7 +1244,8 @@ def generate_emotional_labor_subcategories_boxplot(week_number=0, team_number=No
     korean_to_english = {k: v for k, v in zip(subcategories, subcategories_english)}
 
     # Cutoff values for emotional labor (only normal and high risk levels)
-    cutoff_values = CUTOFF_EMOTIONAL_LABOR
+    # 팀 그래프에서는 여성 절단점만 사용 (For team graphs, use female cutoff values only)
+    cutoff_values = CUTOFF_EMOTIONAL_LABOR  # Female cutoffs only for team figures
 
     # Create a map of subcategories to their cutoff values
     cutoff_map = {
@@ -1640,6 +1655,7 @@ def generate_stress_summary_table(week_number=0):
     """
     Generate a summary table and individual bar graphs for Stress and its subcategories.
     """
+    # 회사 보고서에서는 여성 절단점만 사용 (For company reports, use female cutoff values only)
     output_dir = "data/figures/회사/직무스트레스"  # Updated output directory
     os.makedirs(output_dir, exist_ok=True)
 
@@ -1784,6 +1800,18 @@ def generate_stress_summary_table(week_number=0):
     fig.suptitle(f"Week {week_number} Stress Indicators Summary", fontsize=16, y=0.98)
 
     def get_status_and_color_stress(score, co, higher_is_worse=True):
+        """
+        Get status and color for stress score based on cutoff values.
+        Always uses female cutoff values for team figures.
+
+        Args:
+            score (float): The score to evaluate
+            co (list): Cutoff values [warning_starts, risk_starts]
+            higher_is_worse (bool): Whether higher scores are worse
+
+        Returns:
+            tuple: (status, color) where status is "정상", "준위험", or "위험"
+        """
         # For stress, higher scores are generally worse.
         # co[0] is warning threshold, co[1] is high risk threshold.
         # If score <= co[0] -> Normal (Green)
@@ -1795,20 +1823,18 @@ def generate_stress_summary_table(week_number=0):
 
         if higher_is_worse:
             if score <= co[0]:
-                return "Normal", "green"
+                return "정상", "green"
             elif score <= co[1]:
-                return "Warning", "orange"
+                return "준위험", "orange"
             else:
-                return "High Risk", "red"
-        else:  # lower_is_worse (Not currently used for these stress metrics as structured)
-            if score >= co[1]:  # e.g. score is above the 'good' high threshold
-                return "Normal", "green"
-            elif (
-                score >= co[0]
-            ):  # e.g. score is above the 'good' low threshold but below high
-                return "Warning", "orange"
-            else:  # e.g. score is below the 'good' low threshold
-                return "High Risk", "red"
+                return "위험", "red"
+        else:
+            if score >= co[0]:
+                return "정상", "green"
+            elif score >= co[1]:
+                return "준위험", "orange"
+            else:
+                return "위험", "red"
 
     ax_header_cat = fig.add_subplot(gs[0, 0])
     ax_header_cat.text(
@@ -1979,11 +2005,12 @@ def generate_emotional_labor_summary_table(week_number=0):
 
     # CUTOFF_EMOTIONAL_LABOR is a list: [66.67, 66.67, 61.11, 66.67, 33.33]
     # Corresponding to: 감정조절노력및다양성, 고객응대과부하및갈등, 감정부조화및손상, 조직의감시및모니터링, 조직의지지및보호체계
+    # 회사 보고서에서는 여성 절단점만 사용 (For company reports, use female cutoff values only)
     emotional_labor_categories_config = [
         {
             "name_en": "Emotional Control Effort & Diversity",
             "json_key": "감정조절의 노력 및 다양성",
-            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[0],
+            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[0],  # Female cutoff
             "x_axis_limits": (0, 100),
             "company_score": 0.0,
             "team_scores": {},
@@ -1991,7 +2018,7 @@ def generate_emotional_labor_summary_table(week_number=0):
         {
             "name_en": "Customer Response Overload & Conflict",
             "json_key": "고객응대의 과부하 및 갈등",
-            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[1],
+            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[1],  # Female cutoff
             "x_axis_limits": (0, 100),
             "company_score": 0.0,
             "team_scores": {},
@@ -1999,7 +2026,7 @@ def generate_emotional_labor_summary_table(week_number=0):
         {
             "name_en": "Emotional Dissonance & Damage",
             "json_key": "감정부조화 및 손상",
-            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[2],
+            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[2],  # Female cutoff
             "x_axis_limits": (0, 100),
             "company_score": 0.0,
             "team_scores": {},
@@ -2007,7 +2034,7 @@ def generate_emotional_labor_summary_table(week_number=0):
         {
             "name_en": "Organizational Monitoring",
             "json_key": "조직의 감시 및 모니터링",
-            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[3],
+            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[3],  # Female cutoff
             "x_axis_limits": (0, 100),
             "company_score": 0.0,
             "team_scores": {},
@@ -2015,7 +2042,7 @@ def generate_emotional_labor_summary_table(week_number=0):
         {
             "name_en": "Organizational Support & Protection",
             "json_key": "조직의 지지 및 보호체계",
-            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[4],
+            "cutoff_val": CUTOFF_EMOTIONAL_LABOR[4],  # Female cutoff
             "x_axis_limits": (0, 100),
             "company_score": 0.0,
             "team_scores": {},
@@ -2085,10 +2112,22 @@ def generate_emotional_labor_summary_table(week_number=0):
 
     # Simplified helper function - if score >= cutoff, it's high risk
     def get_status_and_color_emotional_labor(score, cutoff_val):
-        if score < cutoff_val:  # Score is better than (below) the threshold
-            return "Normal", "green"
-        else:  # Score is at or above the threshold (worse)
-            return "High Risk", "red"
+        """
+        Get status and color for emotional labor score based on cutoff values.
+        Always uses female cutoff values for team figures.
+
+        Args:
+            score (float): The score to evaluate
+            cutoff_val (float): Cutoff value
+
+        Returns:
+            tuple: (status, color) where status is "정상", "준위험", or "위험"
+        """
+        # For emotional labor, higher scores are worse
+        if score <= cutoff_val:
+            return "정상", "green"
+        else:
+            return "위험", "red"
 
     # --- Populate Header Row ---
     ax_header_cat = fig.add_subplot(gs[0, 0])
