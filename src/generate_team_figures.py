@@ -2882,6 +2882,207 @@ def generate_timerange_emotion_distribution_graph(week_number=0):
     )
 
 
+def generate_all_team_figures(week_number=0, team_number=None):
+    """
+    Generate all team figures for a specific week and team number.
+
+    This function serves as a wrapper for all the individual figure generation
+    functions for a specific team, making it easier to generate all figures at once.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+    - team_number (int): Team number (1, 2, 3, etc.)
+
+    Returns:
+    - dict: Statistics about figure generation success/failure
+    """
+    # Track success/failure of each figure type
+    results = {"total": 0, "success": 0, "failed": 0, "skipped": 0, "errors": {}}
+
+    # List of functions to call for all weeks
+    burnout_figures = [
+        generate_bat_primary_distribution_graph,
+        generate_exhaustion_distribution_graph,
+        generate_cognitive_regulation_distribution_graph,
+        generate_emotional_regulation_distribution_graph,
+        generate_depersonalization_distribution_graph,
+    ]
+
+    # List of functions to call only for weeks divisible by 4 (0, 4, 8, etc.)
+    stress_and_labor_figures = [
+        generate_stress_distribution_graph,
+        generate_stress_subcategories_boxplot,
+        generate_emotional_labor_subcategories_boxplot,
+    ]
+
+    # Determine which figure sets to generate
+    figure_functions = burnout_figures.copy()
+
+    # Add stress and emotional labor figures if week is divisible by 4
+    if week_number % 4 == 0:
+        figure_functions.extend(stress_and_labor_figures)
+    else:
+        results["skipped"] += len(stress_and_labor_figures)
+
+    # Generate each figure
+    for func in figure_functions:
+        results["total"] += 1
+        try:
+            # Call the figure generation function
+            func(week_number, team_number)
+            results["success"] += 1
+        except Exception as e:
+            # Handle errors and track them
+            results["failed"] += 1
+            error_type = type(e).__name__
+            error_message = str(e)
+            figure_name = func.__name__
+
+            # Store error details
+            if figure_name not in results["errors"]:
+                results["errors"][figure_name] = []
+            results["errors"][figure_name].append(
+                {"error_type": error_type, "error_message": error_message}
+            )
+
+            # Log the error
+            print(
+                f"Error generating {figure_name} for team {team_number}: {error_type} - {error_message}"
+            )
+
+    # Print summary
+    success_rate = (
+        (results["success"] / results["total"]) * 100 if results["total"] > 0 else 0
+    )
+    print(
+        f"Team {team_number} figures generation complete: {results['success']}/{results['total']} successful ({success_rate:.1f}%)"
+    )
+
+    return results
+
+
+def generate_all_company_figures(week_number=0):
+    """
+    Generate all company-level summary figures for a specific week.
+
+    This function serves as a wrapper for all the individual company-level
+    figure generation functions, making it easier to generate all figures at once.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+
+    Returns:
+    - dict: Statistics about figure generation success/failure
+    """
+    # Track success/failure of each figure type
+    results = {"total": 0, "success": 0, "failed": 0, "skipped": 0, "errors": {}}
+
+    # Always generate burnout summary
+    company_figures = [generate_burnout_summary_table]
+
+    # Generate stress and emotional labor summaries only for weeks divisible by 4
+    if week_number % 4 == 0:
+        company_figures.extend(
+            [generate_stress_summary_table, generate_emotional_labor_summary_table]
+        )
+    else:
+        results["skipped"] += 2  # Skip the two stress/labor functions
+
+    # Generate each figure
+    for func in company_figures:
+        results["total"] += 1
+        try:
+            # Call the figure generation function
+            func(week_number)
+            results["success"] += 1
+        except Exception as e:
+            # Handle errors and track them
+            results["failed"] += 1
+            error_type = type(e).__name__
+            error_message = str(e)
+            figure_name = func.__name__
+
+            # Store error details
+            if figure_name not in results["errors"]:
+                results["errors"][figure_name] = []
+            results["errors"][figure_name].append(
+                {"error_type": error_type, "error_message": error_message}
+            )
+
+            # Log the error
+            print(f"Error generating {figure_name}: {error_type} - {error_message}")
+
+    # Print summary
+    success_rate = (
+        (results["success"] / results["total"]) * 100 if results["total"] > 0 else 0
+    )
+    print(
+        f"Company figures generation complete: {results['success']}/{results['total']} successful ({success_rate:.1f}%)"
+    )
+
+    return results
+
+
+def generate_all_app_usage_figures(week_number=0):
+    """
+    Generate all app usage figures for a specific week.
+
+    This function serves as a wrapper for all the individual app usage
+    figure generation functions, making it easier to generate all figures at once.
+
+    Parameters:
+    - week_number (int): Week number (0, 2, 4, etc.)
+
+    Returns:
+    - dict: Statistics about figure generation success/failure
+    """
+    # Track success/failure of each figure type
+    results = {"total": 0, "success": 0, "failed": 0, "errors": {}}
+
+    # App usage figure functions
+    app_usage_figures = [
+        generate_app_usage_by_date_graph,
+        generate_emotion_records_by_date_graph,
+        generate_emotion_distribution_pie_chart,
+        generate_weekday_emotion_distribution_graph,
+        generate_timerange_emotion_distribution_graph,
+    ]
+
+    # Generate each figure
+    for func in app_usage_figures:
+        results["total"] += 1
+        try:
+            # Call the figure generation function
+            func(week_number)
+            results["success"] += 1
+        except Exception as e:
+            # Handle errors and track them
+            results["failed"] += 1
+            error_type = type(e).__name__
+            error_message = str(e)
+            figure_name = func.__name__
+
+            # Store error details
+            if figure_name not in results["errors"]:
+                results["errors"][figure_name] = []
+            results["errors"][figure_name].append(
+                {"error_type": error_type, "error_message": error_message}
+            )
+
+            # Log the error
+            print(f"Error generating {figure_name}: {error_type} - {error_message}")
+
+    # Print summary
+    success_rate = (
+        (results["success"] / results["total"]) * 100 if results["total"] > 0 else 0
+    )
+    print(
+        f"App usage figures generation complete: {results['success']}/{results['total']} successful ({success_rate:.1f}%)"
+    )
+
+    return results
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -2899,25 +3100,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.team is not None:
-        generate_bat_primary_distribution_graph(args.week, args.team)
-        generate_exhaustion_distribution_graph(args.week, args.team)
-        generate_cognitive_regulation_distribution_graph(args.week, args.team)
-        generate_emotional_regulation_distribution_graph(args.week, args.team)
-        generate_depersonalization_distribution_graph(args.week, args.team)
-        generate_stress_distribution_graph(args.week, args.team)
-        generate_stress_subcategories_boxplot(args.week, args.team)
-        generate_emotional_labor_subcategories_boxplot(args.week, args.team)
+        generate_all_team_figures(args.week, args.team)
     else:
         print("No specific team number provided. Skipping team-specific graphs.")
         print("You can run company-wide reports or specify a --team <number>.")
 
-    generate_burnout_summary_table(args.week)
-    generate_stress_summary_table(args.week)
-    generate_emotional_labor_summary_table(args.week)
-    generate_app_usage_by_date_graph(args.week)
-    generate_emotion_records_by_date_graph(args.week)
-    generate_emotion_distribution_pie_chart(args.week)
-    generate_weekday_emotion_distribution_graph(args.week)
-    generate_timerange_emotion_distribution_graph(
-        args.week
-    )  # Added call to the new function
+    generate_all_company_figures(args.week)
+    generate_all_app_usage_figures(args.week)

@@ -71,6 +71,10 @@ for participant in participants:
     role = participant["role"]
     week = (len(participant["analysis"]) - 1) * 2
 
+    # 직무 스트레스와 감정노동 데이터 표시 여부 결정
+    # 0주차, 4주차, 8주차 등 4의 배수 주차에만 데이터를 표시함
+    show_stress_and_emotional_labor = week % 4 == 0
+
     # 참여자의 성별 확인 (기본값은 여성)
     gender = participant.get("gender", "여성")
     is_male = gender == "남성"  # 한국어 성별 표기 사용 ("남성" vs "여성")
@@ -204,6 +208,7 @@ for participant in participants:
         "role": role,
         "week": week,
         "gender": gender,
+        "show_stress_and_emotional_labor": show_stress_and_emotional_labor,  # 직무 스트레스와 감정노동 데이터 표시 여부
         "cutoff_burnout_primary": cutoff_burnout_primary,
         "cutoff_burnout_secondary": cutoff_burnout_secondary,
         "cutoff_burnout_exhaustion": cutoff_burnout_exhaustion,

@@ -52,6 +52,9 @@ from generate_team_figures import (
     generate_emotion_distribution_pie_chart,
     generate_weekday_emotion_distribution_graph,
     generate_timerange_emotion_distribution_graph,
+    generate_all_team_figures,
+    generate_all_company_figures,
+    generate_all_app_usage_figures,
 )  # Import functions for generating team and company figures
 
 
@@ -249,109 +252,45 @@ def main():
             except ValueError:  # Handle case where team number isn't a valid integer
                 pass  # Skip this team
 
-    # Generate figures for all teams
+    # Generate figures for all teams using the wrapper function
+    team_results = {}  # Dictionary to store results for each team
     for team_number in sorted(team_numbers):  # Iterate through team numbers in order
-        try:
-            print(
-                f"Generating figures for team {team_number}..."
-            )  # Print progress message
-            # Generate BAT primary distribution graph
-            generate_bat_primary_distribution_graph(
-                args.week, team_number
-            )  # Generate BAT primary figures for this team
-            # Generate exhaustion distribution graph
-            generate_exhaustion_distribution_graph(
-                args.week, team_number
-            )  # Generate exhaustion figures for this team
-            # Generate cognitive regulation distribution graph
-            generate_cognitive_regulation_distribution_graph(
-                args.week, team_number
-            )  # Generate cognitive regulation figures for this team
-            # Generate emotional regulation distribution graph
-            generate_emotional_regulation_distribution_graph(
-                args.week, team_number
-            )  # Generate emotional regulation figures for this team
-            # Generate depersonalization distribution graph
-            generate_depersonalization_distribution_graph(
-                args.week, team_number
-            )  # Generate depersonalization figures for this team
-            # Generate stress distribution graph
-            generate_stress_distribution_graph(
-                args.week, team_number
-            )  # Generate stress figures for this team
-            # Generate stress subcategories boxplot
-            generate_stress_subcategories_boxplot(
-                args.week, team_number
-            )  # Generate stress subcategories boxplot for this team
-            # Generate emotional labor subcategories boxplot
-            generate_emotional_labor_subcategories_boxplot(
-                args.week, team_number
-            )  # Generate emotional labor subcategories boxplot for this team
-        except Exception as e:  # Catch any errors that occur
-            print(
-                f"Error generating figures for team {team_number}: {e}"
-            )  # Print error message
+        print(f"Generating figures for team {team_number}...")  # Print progress message
+
+        # Use the wrapper function to generate all team figures at once
+        team_results[team_number] = generate_all_team_figures(args.week, team_number)
 
     # Step 9: Generate company-level summary figures
     print("Generating company-level summary figures...")  # Print status message
-    try:
-        # Generate burnout summary table
-        generate_burnout_summary_table(
-            args.week
-        )  # Generate company-level burnout summary
 
-        # Generate stress summary table
-        generate_stress_summary_table(
-            args.week
-        )  # Generate company-level stress summary
+    # Use the wrapper function to generate all company-level figures at once
+    company_results = generate_all_company_figures(args.week)
 
-        # Generate emotional labor summary table
-        generate_emotional_labor_summary_table(
-            args.week
-        )  # Generate company-level emotional labor summary
-
-        print(
-            "Successfully generated company-level summary figures."
-        )  # Print success message
-    except Exception as e:  # Catch any errors that occur
-        print(
-            f"Error generating company-level summary figures: {e}"
-        )  # Print error message
+    # Print overall success message for company figures
+    success_rate = (
+        company_results.get("success", 0)
+        / max(company_results.get("total", 1), 1)
+        * 100
+    )
+    print(f"Company figures generation: {success_rate:.1f}% successful")
 
     # Step 10: Generate app usage figures
     if (
         app_analysis_file
     ):  # Only generate app usage figures if app usage analysis exists
         print("Generating app usage figures...")  # Print status message
-        try:
-            # Generate app usage by date graph
-            generate_app_usage_by_date_graph(
-                args.week
-            )  # Generate daily app usage graph
 
-            # Generate emotion records by date graph
-            generate_emotion_records_by_date_graph(
-                args.week
-            )  # Generate daily emotion records graph
+        # Use the wrapper function to generate all app usage figures at once
+        app_usage_results = generate_all_app_usage_figures(args.week)
 
-            # Generate emotion distribution pie chart
-            generate_emotion_distribution_pie_chart(
-                args.week
-            )  # Generate emotion distribution pie chart
-
-            # Generate weekday emotion distribution graph
-            generate_weekday_emotion_distribution_graph(
-                args.week
-            )  # Generate weekday emotion distribution graph
-
-            # Generate timerange emotion distribution graph
-            generate_timerange_emotion_distribution_graph(
-                args.week
-            )  # Generate timerange emotion distribution graph
-
-            print("Successfully generated app usage figures.")  # Print success message
-        except Exception as e:  # Catch any errors that occur
-            print(f"Error generating app usage figures: {e}")  # Print error message
+        # Print overall success message for app usage figures
+        if app_usage_results.get("total", 0) > 0:
+            app_success_rate = (
+                app_usage_results.get("success", 0)
+                / app_usage_results.get("total", 1)
+                * 100
+            )
+            print(f"App usage figures generation: {app_success_rate:.1f}% successful")
 
     print("Successfully generated all figures.")  # Print success message
     return 0  # Return success code
