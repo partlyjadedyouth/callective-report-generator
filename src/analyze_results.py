@@ -29,23 +29,23 @@ from cutoff_values import (
 
 def load_participant_ids(csv_file="data/csv/participants.csv"):
     """
-    Load participant IDs from a CSV file, using name and team as matching criteria.
+    Load participant IDs and gender information from a CSV file, using name and team as matching criteria.
 
     Args:
         csv_file (str): Path to the CSV file containing participant information
 
     Returns:
-        dict: Dictionary mapping (name, team) tuples to participant IDs
+        dict: Dictionary mapping (name, team) tuples to participant information (id and gender)
     """
-    # Dictionary to store participant IDs with name and team as keys
-    participant_ids = {}
+    # Dictionary to store participant information with name and team as keys
+    participant_info = {}
 
     # Check if the CSV file exists
     if not os.path.exists(csv_file):
         print(
             f"Warning: Participants CSV file '{csv_file}' not found. No IDs will be added."
         )
-        return participant_ids
+        return participant_info
 
     # Read the CSV file
     try:
@@ -53,24 +53,28 @@ def load_participant_ids(csv_file="data/csv/participants.csv"):
             reader = csv.DictReader(f)
             # Iterate through each row in the CSV
             for row in reader:
-                # Extract name, team, and ID
+                # Extract name, team, ID, and gender
                 # Note: CSV column names must match the expected values
                 name = row.get("성함", "").strip()
                 team = row.get("소속", "").strip()
                 participant_id = row.get("아이디", "").strip()
+                gender = row.get("성별", "").strip()  # Get gender information
 
                 # Skip rows with missing data
                 if not (name and team):
                     continue
 
-                # Store participant ID with name and team as key
-                participant_ids[(name, team)] = participant_id
+                # Store participant information with name and team as key
+                participant_info[(name, team)] = {
+                    "id": participant_id,
+                    "gender": gender,
+                }
 
-        print(f"Loaded {len(participant_ids)} participant IDs from {csv_file}")
-        return participant_ids
+        print(f"Loaded {len(participant_info)} participant records from {csv_file}")
+        return participant_info
 
     except Exception as e:
-        print(f"Error loading participant IDs: {e}")
+        print(f"Error loading participant information: {e}")
         return {}
 
 
@@ -88,11 +92,11 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load participant IDs from CSV
-    participant_ids = load_participant_ids()
+    # Load participant information from CSV
+    participant_info = load_participant_ids()
 
     # Dictionary to store all participants with their weekly analyses
-    # Structure: { "unique_id": { "name": "", "team": "", "role": "", "phone": "", "email": "", "analysis": { "0주차": {...}, "2주차": {...} } } }
+    # Structure: { "unique_id": { "name": "", "team": "", "role": "", "phone": "", "email": "", "gender": "", "analysis": { "0주차": {...}, "2주차": {...} } } }
     all_participants = {}
 
     # Get all JSON files in the results directory
@@ -146,10 +150,13 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
                     "analysis": {},
                 }
 
-                # Add ID from participants.csv if available
-                participant_id = participant_ids.get((name, team), "")
-                if participant_id:
-                    all_participants[unique_id]["id"] = participant_id
+                # Add ID and gender from participants.csv if available
+                participant_data = participant_info.get((name, team), {})
+                if participant_data:
+                    all_participants[unique_id]["id"] = participant_data.get("id", "")
+                    all_participants[unique_id]["gender"] = participant_data.get(
+                        "gender", ""
+                    )
 
             # Initialize analysis for this week
             weekly_analysis = {"category_averages": {}, "type_averages": {}}
@@ -293,6 +300,7 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
                 if "id" in participant_data and participant_data["id"]
                 else None
             ),
+            "gender": participant_data["gender"],
             "analysis": participant_data["analysis"],
         }
 
@@ -487,7 +495,13 @@ def generate_risk_levels_csv(group_analysis, output_dir):
     sorted_weeks = sorted(all_weeks)
 
     # Group names in the desired order
-    group_names = ["회사", "상담 1팀", "상담 2팀", "상담 3팀", "상담 4팀"]
+    group_names = [
+        "회사",
+        "상담 1팀",
+        "상담 2팀",
+        "상담 3팀",
+        "상담 4팀",
+    ]
 
     # Define the CSV file path
     csv_file_path = os.path.join(output_dir, "risk_levels.csv")
@@ -535,13 +549,13 @@ def generate_risk_levels_csv(group_analysis, output_dir):
             # Write burnout distribution header
             csvwriter.writerow([f"{week} 번아웃 분포"])
 
-            # Write the header for distribution labels - now grouped by team
+            # Write the header for distribution labels - now grouped by team and gender
             header_row = [""]
             for group in group_names:
                 header_row.extend([f"{group} 정상", f"{group} 준위험", f"{group} 위험"])
             csvwriter.writerow(header_row)
 
-            # Write burnout distribution counts - now grouped by team
+            # Write burnout distribution counts - now grouped by team and gender
             row = ["인원수"]
             for group_name in group_names:
                 if (
@@ -561,13 +575,13 @@ def generate_risk_levels_csv(group_analysis, output_dir):
             # Write stress distribution header
             csvwriter.writerow([f"{week} 직무스트레스 분포"])
 
-            # Write the header for distribution labels - now grouped by team
+            # Write the header for distribution labels - now grouped by team and gender
             header_row = [""]
             for group in group_names:
                 header_row.extend([f"{group} 정상", f"{group} 준위험", f"{group} 위험"])
             csvwriter.writerow(header_row)
 
-            # Write stress distribution counts - now grouped by team
+            # Write stress distribution counts - now grouped by team and gender
             row = ["인원수"]
             for group_name in group_names:
                 if (
