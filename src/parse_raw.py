@@ -36,6 +36,12 @@ def parse_bat_primary_results(
             output_dir, exist_ok=True
         )  # Create output directory if it doesn't exist
 
+        # Extract week number from week_suffix
+        week_num = int(week_suffix.replace("주차", ""))  # Convert "X주차" to integer X
+
+        # Determine if this is week 2 or later (different format)
+        is_week_2_or_later = week_num >= 2  # Check if week number is 2 or greater
+
         # Load CSV data - explicitly specify the dtype for phone column to keep leading zeros
         print(f"Loading CSV data from: {csv_path}")  # Print status message
         df = pd.read_csv(
@@ -98,13 +104,25 @@ def parse_bat_primary_results(
         questionnaire_data = {}  # Dictionary to store questionnaire data
         q_columns = {}  # Dictionary to store column indices for each questionnaire
 
+        # Determine if stress and emotional labor questionnaires should be included
+        include_stress_emotional = (
+            week_num % 4 == 0
+        )  # Only include these every 4 weeks (0, 4, 8, 12, etc.)
+
         # Determine columns for each questionnaire type
-        current_col = 6  # Start from column 6 (after basic info columns)
+        # Starting column is different based on week (week 2+ has fewer initial columns)
+        current_col = (
+            3 if is_week_2_or_later else 6
+        )  # Start from column 3 for week 2+ (missing team, role, email)
 
         for (
             q_type,
             q_path,
         ) in questionnaire_paths.items():  # For each questionnaire type
+            # Skip stress and emotional labor questionnaires if not relevant for this week
+            if not include_stress_emotional and q_type in ["emotional_labor", "stress"]:
+                continue  # Skip this questionnaire type
+
             print(
                 f"Loading {q_type} questionnaire from: {q_path}"
             )  # Print status message
@@ -148,16 +166,25 @@ def parse_bat_primary_results(
                 "name": (
                     row["성명"].strip() if pd.notna(row["성명"]) else ""
                 ),  # Name (trimmed, handle NaN)
-                "team": row["소속"] if pd.notna(row["소속"]) else "",  # Team
-                "role": row["직무"] if pd.notna(row["직무"]) else "",  # Role
                 "phone": phone_number,  # Phone number properly formatted with 4 digits
-                "email": (
-                    row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"]
-                    if pd.notna(row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"])
-                    else ""
-                ),  # Email
                 "scores": {},  # Initialize scores dictionary
             }
+
+            # Only include team, role, and email fields for week 0-1
+            if not is_week_2_or_later:
+                person_data.update(
+                    {
+                        "team": row["소속"] if pd.notna(row["소속"]) else "",  # Team
+                        "role": row["직무"] if pd.notna(row["직무"]) else "",  # Role
+                        "email": (
+                            row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"]
+                            if pd.notna(
+                                row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"]
+                            )
+                            else ""
+                        ),  # Email
+                    }
+                )
 
             # Process each questionnaire type
             for q_type, (
@@ -168,6 +195,16 @@ def parse_bat_primary_results(
                     q_type
                 ] = {}  # Initialize scores for this questionnaire type
                 q_data = questionnaire_data[q_type]  # Get questionnaire data
+
+                # Check if we have enough columns in the CSV
+                if end_col >= len(
+                    df.columns
+                ):  # If column index exceeds available columns
+                    print(
+                        f"Warning: Column index {end_col} exceeds CSV columns ({len(df.columns)}). "
+                        f"Skipping {q_type} questionnaire."
+                    )
+                    continue  # Skip this questionnaire type
 
                 # Get columns for this questionnaire type
                 q_cols = df.columns[start_col : end_col + 1]  # Get column names

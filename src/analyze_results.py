@@ -128,6 +128,14 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
             print(f"No data found in {result_file}. Skipping.")
             continue
 
+        # Extract week number from filename
+        try:
+            week_num = int(file_name.replace("주차", ""))
+            is_week_2_or_later = week_num >= 2
+        except ValueError:
+            print(f"Warning: Could not extract week number from {file_name}")
+            is_week_2_or_later = False
+
         # Process each participant's results for this week
         for participant in results:
             name = participant.get("name", "Unknown")  # Get participant name
@@ -136,28 +144,52 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
             phone = participant.get("phone", "")  # Get participant phone
             email = participant.get("email", "")  # Get participant email
 
-            # Create a unique identifier using name and team
-            # Since everyone has a name and team, and people with the same name are never in the same team
-            unique_id = f"{name}_{team}"  # Use name and team as unique ID
+            # We'll use just the name as the primary identifier
+            # This assumes each name is unique across the organization
+            unique_id = name
 
             # If this participant isn't in all_participants yet, add them
             if unique_id not in all_participants:
                 all_participants[unique_id] = {
                     "name": name,
-                    "team": team,
-                    "role": role,
+                    "team": (
+                        team if not is_week_2_or_later else "Unknown"
+                    ),  # Use team from week 0-1
+                    "role": (
+                        role if not is_week_2_or_later else "Unknown"
+                    ),  # Use role from week 0-1
                     "phone": phone,  # Store phone number
-                    "email": email,  # Store email address
+                    "email": (
+                        email if not is_week_2_or_later else ""
+                    ),  # Store email address from week 0-1
                     "analysis": {},
                 }
 
                 # Add ID and gender from participants.csv if available
-                participant_data = participant_info.get((name, team), {})
-                if participant_data:
-                    all_participants[unique_id]["id"] = participant_data.get("id", "")
-                    all_participants[unique_id]["gender"] = participant_data.get(
+                # Try to find participant by name
+                matched_participant = None
+                for (p_name, p_team), p_data in participant_info.items():
+                    if p_name == name:
+                        matched_participant = p_data
+                        # Update team from participants.csv for consistent team information
+                        all_participants[unique_id]["team"] = p_team
+                        break
+
+                if matched_participant:
+                    all_participants[unique_id]["id"] = matched_participant.get(
+                        "id", ""
+                    )
+                    all_participants[unique_id]["gender"] = matched_participant.get(
                         "gender", ""
                     )
+            elif is_week_2_or_later:
+                # For week 2+, update existing data with better information from participants.csv if needed
+                if all_participants[unique_id]["team"] == "Unknown":
+                    # Try to find better team info from participants.csv
+                    for (p_name, p_team), _ in participant_info.items():
+                        if p_name == name:
+                            all_participants[unique_id]["team"] = p_team
+                            break
 
             # Initialize analysis for this week
             weekly_analysis = {"category_averages": {}, "type_averages": {}}
@@ -301,7 +333,9 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
                 if "id" in participant_data and participant_data["id"]
                 else None
             ),
-            "gender": participant_data["gender"],
+            "gender": participant_data.get(
+                "gender", ""
+            ),  # Use get() with default empty string
             "analysis": participant_data["analysis"],
         }
 
