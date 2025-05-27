@@ -13,6 +13,9 @@ import pandas as pd  # Library for data manipulation and analysis
 import json  # Library for JSON data handling
 import os  # Library for file and directory operations
 
+# 참가자 ID 관리 모듈 임포트
+from participant_id_manager import generate_unique_id
+
 
 def parse_bat_primary_results(
     csv_path, questionnaire_path, output_dir="data/results", week_suffix="0주차"
@@ -161,12 +164,18 @@ def parse_bat_primary_results(
                     4
                 )  # Pad with leading zeros if needed to make 4 digits
 
+            # 이름과 소속 정보 추출 (공백 제거)
+            name = row["성명"].strip() if pd.notna(row["성명"]) else ""
+
+            # 팀 정보는 2주차 이후에는 없을 수 있음
+            team = ""
+            if not is_week_2_or_later and pd.notna(row["소속"]):
+                team = row["소속"].strip()
+
             # Extract basic information
             person_data = {  # Create person data dictionary
-                "name": (
-                    row["성명"].strip() if pd.notna(row["성명"]) else ""
-                ),  # Name (trimmed, handle NaN)
-                "phone": phone_number,  # Phone number properly formatted with 4 digits
+                "name": name,  # 이름
+                "phone": phone_number,  # 전화번호
                 "scores": {},  # Initialize scores dictionary
             }
 
@@ -174,15 +183,17 @@ def parse_bat_primary_results(
             if not is_week_2_or_later:
                 person_data.update(
                     {
-                        "team": row["소속"] if pd.notna(row["소속"]) else "",  # Team
-                        "role": row["직무"] if pd.notna(row["직무"]) else "",  # Role
+                        "team": team,  # 팀
+                        "role": (
+                            row["직무"].strip() if pd.notna(row["직무"]) else ""
+                        ),  # 직무
                         "email": (
-                            row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"]
+                            row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"].strip()
                             if pd.notna(
                                 row["설문 결과 전송을 위한 이메일 주소 (오타 주의)"]
                             )
                             else ""
-                        ),  # Email
+                        ),  # 이메일
                     }
                 )
 
@@ -248,16 +259,13 @@ def parse_bat_primary_results(
             json.dump(result_list, f, ensure_ascii=False, indent=2)  # Write JSON data
 
         print(
-            f"All questionnaire results saved to '{output_file}'"
-        )  # Print success message
-        return output_file  # Return output file path
+            f"Successfully processed {len(result_list)} responses."
+        )  # Print status message
+        return output_file  # Return path to the generated file
 
-    except Exception as e:  # Handle exceptions
-        print(f"Error processing questionnaire results: {e}")  # Print error message
-        import traceback  # Import traceback module
-
-        traceback.print_exc()  # Print exception traceback
-        return None  # Return None on error
+    except Exception as e:
+        print(f"Error parsing questionnaire results: {e}")  # Print error message
+        return None  # Return None to indicate an error occurred
 
 
 # Run as standalone script

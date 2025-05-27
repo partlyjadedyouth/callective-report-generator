@@ -14,6 +14,9 @@ import json  # JSON 파일을 처리하기 위한 라이브러리
 import os  # 파일 경로 관리를 위한 라이브러리
 from cutoff_values import CUTOFF_BURNOUT_PRIMARY  # 번아웃 절단점 임포트
 
+# 참가자 ID 관리 모듈 임포트
+from participant_id_manager import generate_unique_id
+
 
 def get_risk_level(score):
     """
@@ -47,10 +50,20 @@ def main():
     # 분류 변경된 참가자 추적을 위한 리스트
     changed_participants = []
 
+    # 참가자 ID 목록 생성 (동명이인 처리용)
+    participant_ids = {}  # {unique_id: participant_info}
+
     # 각 참가자 순회
     for participant in data["participants"]:
         name = participant["name"]  # 참가자 이름
         team = participant["team"]  # 참가자 팀
+
+        # 고유 ID 생성
+        unique_id = generate_unique_id(name, team)
+
+        # 참가자 정보를 고유 ID로 저장
+        participant_ids[unique_id] = participant
+
         analysis = participant["analysis"]  # 참가자 분석 데이터
 
         # 0주차와 2주차 데이터가 모두 있는지 확인
@@ -75,6 +88,7 @@ def main():
                         {
                             "name": name,
                             "team": team,  # 팀 정보 추가
+                            "unique_id": unique_id,  # 고유 ID 추가
                             "week0_score": score_week0,
                             "week2_score": score_week2,
                             "score_change": score_change,

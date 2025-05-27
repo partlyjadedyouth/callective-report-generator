@@ -27,56 +27,13 @@ from cutoff_values import (
     CUTOFF_STRESS_MALE,  # Import male cutoff values for stress risk assessment
 )  # Import cutoff values for burnout risk assessment
 
-
-def load_participant_ids(csv_file="data/csv/participants.csv"):
-    """
-    Load participant IDs and gender information from a CSV file, using name and team as matching criteria.
-
-    Args:
-        csv_file (str): Path to the CSV file containing participant information
-
-    Returns:
-        dict: Dictionary mapping (name, team) tuples to participant information (id and gender)
-    """
-    # Dictionary to store participant information with name and team as keys
-    participant_info = {}
-
-    # Check if the CSV file exists
-    if not os.path.exists(csv_file):
-        print(
-            f"Warning: Participants CSV file '{csv_file}' not found. No IDs will be added."
-        )
-        return participant_info
-
-    # Read the CSV file
-    try:
-        with open(csv_file, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            # Iterate through each row in the CSV
-            for row in reader:
-                # Extract name, team, ID, and gender
-                # Note: CSV column names must match the expected values
-                name = row.get("성함", "").strip()
-                team = row.get("소속", "").strip()
-                participant_id = row.get("아이디", "").strip()
-                gender = row.get("성별", "").strip()  # Get gender information
-
-                # Skip rows with missing data
-                if not (name and team):
-                    continue
-
-                # Store participant information with name and team as key
-                participant_info[(name, team)] = {
-                    "id": participant_id,
-                    "gender": gender,
-                }
-
-        print(f"Loaded {len(participant_info)} participant records from {csv_file}")
-        return participant_info
-
-    except Exception as e:
-        print(f"Error loading participant information: {e}")
-        return {}
+# 참가자 ID 관리 모듈 임포트
+from participant_id_manager import (
+    load_participant_ids,
+    generate_unique_id,
+    find_matching_participant,
+    match_with_csv_data,
+)
 
 
 def analyze_results(results_dir="data/results", output_dir="data/analysis"):
@@ -144,60 +101,19 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
             phone = participant.get("phone", "")  # Get participant phone
             email = participant.get("email", "")  # Get participant email
 
-            # We'll use a combination of name and team as the unique identifier
-            # This handles cases where multiple people have the same name
-            unique_id = f"{name}_{team}"
+            # 공통 모듈 사용하여 고유 ID 생성
+            unique_id = generate_unique_id(name, team)
 
-            # 2주차 이후에는 전화번호로 이전 참가자와 일치시킵니다
-            # For weeks 2+, we need special handling for participants with missing team info
-            # Try to find a match based on phone number, which is usually consistent
-            existing_participant_key = None
+            # 2주차 이후에는 동명이인 처리를 위한 추가 로직 적용
+            if is_week_2_or_later:
+                # 기존 참가자 매칭 시도
+                existing_participant_key = find_matching_participant(
+                    all_participants, name, team, phone, email
+                )
 
-            if is_week_2_or_later and (team == "Unknown" or not team):
-                # If we have a phone number, use it to match with existing participants
-                if phone:
-                    for key, participant_data in all_participants.items():
-                        if (
-                            participant_data.get("phone") == phone
-                            and participant_data.get("name") == name
-                        ):
-                            existing_participant_key = key
-                            break
-
-                # If no match by phone, try to match by name and look at teams from participants.csv
-                if not existing_participant_key:
-                    # Find all previous entries with the same name
-                    matching_keys = [
-                        key
-                        for key, data in all_participants.items()
-                        if data.get("name") == name
-                    ]
-
-                    if len(matching_keys) == 1:
-                        # If there's only one previous participant with this name, use that
-                        existing_participant_key = matching_keys[0]
-                    elif len(matching_keys) > 1:
-                        # If there are multiple, try to match using participant_info
-                        matched_with_csv = False
-                        for (p_name, p_team), p_data in participant_info.items():
-                            if p_name == name:
-                                # Check if we have a participant with this name and team
-                                potential_key = f"{name}_{p_team}"
-                                if potential_key in all_participants:
-                                    existing_participant_key = potential_key
-                                    matched_with_csv = True
-                                    break
-
-                        # If still no match, use email or any other identifier if available
-                        if not matched_with_csv and email:
-                            for key in matching_keys:
-                                if all_participants[key].get("email") == email:
-                                    existing_participant_key = key
-                                    break
-
-            # If we found an existing participant, use that instead of creating a new entry
-            if existing_participant_key and existing_participant_key != unique_id:
-                unique_id = existing_participant_key
+                # 기존 참가자를 찾았으면 해당 ID 사용
+                if existing_participant_key and existing_participant_key != unique_id:
+                    unique_id = existing_participant_key
 
             # We only create a new entry if it doesn't exist already
             if unique_id not in all_participants:
@@ -210,26 +126,14 @@ def analyze_results(results_dir="data/results", output_dir="data/analysis"):
                     "analysis": {},
                 }
 
-                # Add ID and gender from participants.csv if available
-                matched_participant = None
-                for (p_name, p_team), p_data in participant_info.items():
-                    # First try exact match on both name and team
-                    if p_name == name and p_team == team:
-                        matched_participant = p_data
-                        # Update team info
-                        all_participants[unique_id]["team"] = p_team
-                        break
-                    # If no exact match, try matching just by name if we don't have a good team value
-                    elif (
-                        p_name == name
-                        and (team == "Unknown" or not team)
-                        and matched_participant is None
-                    ):
-                        matched_participant = p_data
-                        # Update team from participants.csv
-                        all_participants[unique_id]["team"] = p_team
+                # CSV 데이터와 매칭하여 ID와 성별 정보 추가
+                matched_team, matched_participant = match_with_csv_data(
+                    name, team, participant_info
+                )
 
+                # 매칭된 정보가 있으면 업데이트
                 if matched_participant:
+                    all_participants[unique_id]["team"] = matched_team
                     all_participants[unique_id]["id"] = matched_participant.get(
                         "id", ""
                     )
