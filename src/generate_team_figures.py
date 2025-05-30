@@ -69,6 +69,14 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
     team_scores = []  # List to store scores from the specified team
     week_key = f"{week_number}주차"
 
+    # Collect previous week scores if week_number >= 2 (2주차 이후부터)
+    previous_all_scores = []  # List to store previous week scores from all participants
+    previous_team_scores = (
+        []
+    )  # List to store previous week scores from the specified team
+    previous_week_number = week_number - 2  # 지난 검사 (2주 전)
+    previous_week_key = f"{previous_week_number}주차"
+
     for participant in analysis_data["participants"]:
         # Check if participant has data for the specified week
         if week_key in participant["analysis"]:
@@ -87,6 +95,24 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
                     and participant["team"] == f"상담 {team_number}팀"
                 ):
                     team_scores.append(score)
+
+        # Collect previous week data if week_number >= 2 and previous week data exists
+        if week_number >= 2 and previous_week_key in participant["analysis"]:
+            # Get the BAT_primary score for this participant from previous week
+            previous_score = participant["analysis"][previous_week_key][
+                "category_averages"
+            ].get("BAT_primary")
+
+            if previous_score is not None:
+                # Add to previous week all scores list
+                previous_all_scores.append(previous_score)
+
+                # If team is specified, collect previous week scores for that team
+                if (
+                    team_number is not None
+                    and participant["team"] == f"상담 {team_number}팀"
+                ):
+                    previous_team_scores.append(previous_score)
 
     # Create the plot with a clean, modern style
     plt.figure(figsize=(10, 6))
@@ -108,6 +134,24 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
             label="Overall",
             linewidth=1.5,
         )
+
+    # Plot previous week data if available (gray lines)
+    if week_number >= 2:
+        # Plot previous week normal distribution for team participants (gray solid line)
+        if previous_team_scores:
+            # Calculate mean and standard deviation for previous week team participants
+            mu_prev_team = np.mean(previous_team_scores)
+            std_prev_team = np.std(previous_team_scores)
+            # Plot previous week normal distribution curve (gray solid line)
+            plt.plot(
+                x,
+                stats.norm.pdf(x, mu_prev_team, std_prev_team),
+                color="gray",
+                linestyle="-",
+                label=f"Team {team_number} (Week {previous_week_number})",
+                linewidth=2,
+                alpha=0.7,
+            )
 
     # Plot normal distribution for team participants (blue solid line)
     if team_scores:
@@ -158,7 +202,14 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
     # Set labels and title
     plt.xlabel("Burnout Score", fontsize=12)
     plt.ylabel("Density", fontsize=12)
-    plt.title(f"Team {team_number} Burnout Score Distribution", fontsize=14)
+    # Add previous week information to title if available
+    if week_number >= 2 and previous_team_scores:
+        plt.title(
+            f"Team {team_number} Burnout Score Distribution (Week {week_number} vs Week {previous_week_number})",
+            fontsize=14,
+        )
+    else:
+        plt.title(f"Team {team_number} Burnout Score Distribution", fontsize=14)
 
     # Add legend with proper placement
     plt.legend(loc="upper right")
@@ -221,6 +272,14 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
     team_scores = []  # List to store scores from the specified team
     week_key = f"{week_number}주차"
 
+    # Collect previous week scores if week_number >= 2 (2주차 이후부터)
+    previous_all_scores = []  # List to store previous week scores from all participants
+    previous_team_scores = (
+        []
+    )  # List to store previous week scores from the specified team
+    previous_week_number = week_number - 2  # 지난 검사 (2주 전)
+    previous_week_key = f"{previous_week_number}주차"
+
     for participant in analysis_data["participants"]:
         # Check if participant has data for the specified week
         if week_key in participant["analysis"]:
@@ -241,6 +300,29 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
                         and participant["team"] == f"상담 {team_number}팀"
                     ):
                         team_scores.append(score)
+            except (KeyError, TypeError):
+                # Skip if the score is not available
+                continue
+
+        # Collect previous week data if week_number >= 2 and previous week data exists
+        if week_number >= 2 and previous_week_key in participant["analysis"]:
+            # Get the exhaustion score for this participant from previous week
+            try:
+                # Access the "탈진" (exhaustion) score from type_averages for previous week
+                previous_score = participant["analysis"][previous_week_key][
+                    "type_averages"
+                ]["BAT_primary"].get("탈진")
+
+                if previous_score is not None:
+                    # Add to previous week all scores list
+                    previous_all_scores.append(previous_score)
+
+                    # If team is specified, collect previous week scores for that team
+                    if (
+                        team_number is not None
+                        and participant["team"] == f"상담 {team_number}팀"
+                    ):
+                        previous_team_scores.append(previous_score)
             except (KeyError, TypeError):
                 # Skip if the score is not available
                 continue
@@ -266,6 +348,24 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
             linewidth=1.5,
         )
 
+    # Plot previous week data if available (gray lines)
+    if week_number >= 2:
+        # Plot previous week normal distribution for team participants (gray solid line)
+        if previous_team_scores:
+            # Calculate mean and standard deviation for previous week team participants
+            mu_prev_team = np.mean(previous_team_scores)
+            std_prev_team = np.std(previous_team_scores)
+            # Plot previous week normal distribution curve (gray solid line)
+            plt.plot(
+                x,
+                stats.norm.pdf(x, mu_prev_team, std_prev_team),
+                color="gray",
+                linestyle="-",
+                label=f"Team {team_number} (Week {previous_week_number})",
+                linewidth=2,
+                alpha=0.7,
+            )
+
     # Plot normal distribution for team participants (blue solid line)
     if team_scores:
         # Calculate mean and standard deviation for team participants
@@ -280,9 +380,14 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
             linewidth=2,
         )
 
-    # Get the maximum y value for filling background colors
-    ax = plt.gca()
-    ymax = ax.get_ylim()[1]
+    # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
+    plt.ylim(0, 1.0)
+
+    # Set consistent y-axis ticks
+    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+
+    # Get the maximum y value for filling background colors (use fixed value now)
+    ymax = 1.0
 
     # Draw vertical lines at cutoff values
     plt.axvline(x=cutoff_burnout_exhaustion[0], color="gray", linestyle="--", alpha=0.5)
@@ -320,7 +425,14 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
     # Set labels and title
     plt.xlabel("Exhaustion Score", fontsize=12)
     plt.ylabel("Density", fontsize=12)
-    plt.title(f"Team {team_number} Exhaustion Score Distribution", fontsize=14)
+    # Add previous week information to title if available
+    if week_number >= 2 and previous_team_scores:
+        plt.title(
+            f"Team {team_number} Exhaustion Score Distribution (Week {week_number} vs Week {previous_week_number})",
+            fontsize=14,
+        )
+    else:
+        plt.title(f"Team {team_number} Exhaustion Score Distribution", fontsize=14)
 
     # Add legend with proper placement
     plt.legend(loc="upper right")
@@ -384,6 +496,14 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
     team_scores = []  # List to store scores from the specified team
     week_key = f"{week_number}주차"
 
+    # Collect previous week scores if week_number >= 2 (2주차 이후부터)
+    previous_all_scores = []  # List to store previous week scores from all participants
+    previous_team_scores = (
+        []
+    )  # List to store previous week scores from the specified team
+    previous_week_number = week_number - 2  # 지난 검사 (2주 전)
+    previous_week_key = f"{previous_week_number}주차"
+
     for participant in analysis_data["participants"]:
         # Check if participant has data for the specified week
         if week_key in participant["analysis"]:
@@ -404,6 +524,29 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
                         and participant["team"] == f"상담 {team_number}팀"
                     ):
                         team_scores.append(score)
+            except (KeyError, TypeError):
+                # Skip if the score is not available
+                continue
+
+        # Collect previous week data if week_number >= 2 and previous week data exists
+        if week_number >= 2 and previous_week_key in participant["analysis"]:
+            # Get the cognitive regulation score for this participant from previous week
+            try:
+                # Access the "인지적 조절" (cognitive regulation) score from type_averages for previous week
+                previous_score = participant["analysis"][previous_week_key][
+                    "type_averages"
+                ]["BAT_primary"].get("인지적 조절")
+
+                if previous_score is not None:
+                    # Add to previous week all scores list
+                    previous_all_scores.append(previous_score)
+
+                    # If team is specified, collect previous week scores for that team
+                    if (
+                        team_number is not None
+                        and participant["team"] == f"상담 {team_number}팀"
+                    ):
+                        previous_team_scores.append(previous_score)
             except (KeyError, TypeError):
                 # Skip if the score is not available
                 continue
@@ -429,6 +572,24 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
             linewidth=1.5,
         )
 
+    # Plot previous week data if available (gray lines)
+    if week_number >= 2:
+        # Plot previous week normal distribution for team participants (gray solid line)
+        if previous_team_scores:
+            # Calculate mean and standard deviation for previous week team participants
+            mu_prev_team = np.mean(previous_team_scores)
+            std_prev_team = np.std(previous_team_scores)
+            # Plot previous week normal distribution curve (gray solid line)
+            plt.plot(
+                x,
+                stats.norm.pdf(x, mu_prev_team, std_prev_team),
+                color="gray",
+                linestyle="-",
+                label=f"Team {team_number} (Week {previous_week_number})",
+                linewidth=2,
+                alpha=0.7,
+            )
+
     # Plot normal distribution for team participants (blue solid line)
     if team_scores:
         # Calculate mean and standard deviation for team participants
@@ -443,9 +604,14 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
             linewidth=2,
         )
 
-    # Get the maximum y value for filling background colors
-    ax = plt.gca()
-    ymax = ax.get_ylim()[1]
+    # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
+    plt.ylim(0, 1.0)
+
+    # Set consistent y-axis ticks
+    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+
+    # Get the maximum y value for filling background colors (use fixed value now)
+    ymax = 1.0
 
     # Draw vertical lines at cutoff values
     plt.axvline(
@@ -494,9 +660,16 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
     # Set labels and title
     plt.xlabel("Cognitive Regulation Score", fontsize=12)
     plt.ylabel("Density", fontsize=12)
-    plt.title(
-        f"Team {team_number} Cognitive Regulation Score Distribution", fontsize=14
-    )
+    # Add previous week information to title if available
+    if week_number >= 2 and previous_team_scores:
+        plt.title(
+            f"Team {team_number} Cognitive Regulation Score Distribution (Week {week_number} vs Week {previous_week_number})",
+            fontsize=14,
+        )
+    else:
+        plt.title(
+            f"Team {team_number} Cognitive Regulation Score Distribution", fontsize=14
+        )
 
     # Add legend with proper placement
     plt.legend(loc="upper right")
@@ -564,6 +737,14 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
     team_scores = []  # List to store scores from the specified team
     week_key = f"{week_number}주차"
 
+    # Collect previous week scores if week_number >= 2 (2주차 이후부터)
+    previous_all_scores = []  # List to store previous week scores from all participants
+    previous_team_scores = (
+        []
+    )  # List to store previous week scores from the specified team
+    previous_week_number = week_number - 2  # 지난 검사 (2주 전)
+    previous_week_key = f"{previous_week_number}주차"
+
     for participant in analysis_data["participants"]:
         # Check if participant has data for the specified week
         if week_key in participant["analysis"]:
@@ -584,6 +765,29 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
                         and participant["team"] == f"상담 {team_number}팀"
                     ):
                         team_scores.append(score)
+            except (KeyError, TypeError):
+                # Skip if the score is not available
+                continue
+
+        # Collect previous week data if week_number >= 2 and previous week data exists
+        if week_number >= 2 and previous_week_key in participant["analysis"]:
+            # Get the emotional regulation score for this participant from previous week
+            try:
+                # Access the "정서적 조절" (emotional regulation) score from type_averages for previous week
+                previous_score = participant["analysis"][previous_week_key][
+                    "type_averages"
+                ]["BAT_primary"].get("정서적 조절")
+
+                if previous_score is not None:
+                    # Add to previous week all scores list
+                    previous_all_scores.append(previous_score)
+
+                    # If team is specified, collect previous week scores for that team
+                    if (
+                        team_number is not None
+                        and participant["team"] == f"상담 {team_number}팀"
+                    ):
+                        previous_team_scores.append(previous_score)
             except (KeyError, TypeError):
                 # Skip if the score is not available
                 continue
@@ -609,6 +813,24 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
             linewidth=1.5,
         )
 
+    # Plot previous week data if available (gray lines)
+    if week_number >= 2:
+        # Plot previous week normal distribution for team participants (gray solid line)
+        if previous_team_scores:
+            # Calculate mean and standard deviation for previous week team participants
+            mu_prev_team = np.mean(previous_team_scores)
+            std_prev_team = np.std(previous_team_scores)
+            # Plot previous week normal distribution curve (gray solid line)
+            plt.plot(
+                x,
+                stats.norm.pdf(x, mu_prev_team, std_prev_team),
+                color="gray",
+                linestyle="-",
+                label=f"Team {team_number} (Week {previous_week_number})",
+                linewidth=2,
+                alpha=0.7,
+            )
+
     # Plot normal distribution for team participants (blue solid line)
     if team_scores:
         # Calculate mean and standard deviation for team participants
@@ -623,9 +845,14 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
             linewidth=2,
         )
 
-    # Get the maximum y value for filling background colors
-    ax = plt.gca()
-    ymax = ax.get_ylim()[1]
+    # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
+    plt.ylim(0, 1.0)
+
+    # Set consistent y-axis ticks
+    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+
+    # Get the maximum y value for filling background colors (use fixed value now)
+    ymax = 1.0
 
     # Draw vertical lines at cutoff values
     plt.axvline(
@@ -674,9 +901,16 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
     # Set labels and title
     plt.xlabel("Emotional Regulation Score", fontsize=12)
     plt.ylabel("Density", fontsize=12)
-    plt.title(
-        f"Team {team_number} Emotional Regulation Score Distribution", fontsize=14
-    )
+    # Add previous week information to title if available
+    if week_number >= 2 and previous_team_scores:
+        plt.title(
+            f"Team {team_number} Emotional Regulation Score Distribution (Week {week_number} vs Week {previous_week_number})",
+            fontsize=14,
+        )
+    else:
+        plt.title(
+            f"Team {team_number} Emotional Regulation Score Distribution", fontsize=14
+        )
 
     # Add legend with proper placement
     plt.legend(loc="upper right")
@@ -744,6 +978,14 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
     team_scores = []  # List to store scores from the specified team
     week_key = f"{week_number}주차"
 
+    # Collect previous week scores if week_number >= 2 (2주차 이후부터)
+    previous_all_scores = []  # List to store previous week scores from all participants
+    previous_team_scores = (
+        []
+    )  # List to store previous week scores from the specified team
+    previous_week_number = week_number - 2  # 지난 검사 (2주 전)
+    previous_week_key = f"{previous_week_number}주차"
+
     for participant in analysis_data["participants"]:
         # Check if participant has data for the specified week
         if week_key in participant["analysis"]:
@@ -764,6 +1006,29 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
                         and participant["team"] == f"상담 {team_number}팀"
                     ):
                         team_scores.append(score)
+            except (KeyError, TypeError):
+                # Skip if the score is not available
+                continue
+
+        # Collect previous week data if week_number >= 2 and previous week data exists
+        if week_number >= 2 and previous_week_key in participant["analysis"]:
+            # Get the depersonalization score for this participant from previous week
+            try:
+                # Access the "심적 거리" (depersonalization) score from type_averages for previous week
+                previous_score = participant["analysis"][previous_week_key][
+                    "type_averages"
+                ]["BAT_primary"].get("심적 거리")
+
+                if previous_score is not None:
+                    # Add to previous week all scores list
+                    previous_all_scores.append(previous_score)
+
+                    # If team is specified, collect previous week scores for that team
+                    if (
+                        team_number is not None
+                        and participant["team"] == f"상담 {team_number}팀"
+                    ):
+                        previous_team_scores.append(previous_score)
             except (KeyError, TypeError):
                 # Skip if the score is not available
                 continue
@@ -789,6 +1054,24 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
             linewidth=1.5,
         )
 
+    # Plot previous week data if available (gray lines)
+    if week_number >= 2:
+        # Plot previous week normal distribution for team participants (gray solid line)
+        if previous_team_scores:
+            # Calculate mean and standard deviation for previous week team participants
+            mu_prev_team = np.mean(previous_team_scores)
+            std_prev_team = np.std(previous_team_scores)
+            # Plot previous week normal distribution curve (gray solid line)
+            plt.plot(
+                x,
+                stats.norm.pdf(x, mu_prev_team, std_prev_team),
+                color="gray",
+                linestyle="-",
+                label=f"Team {team_number} (Week {previous_week_number})",
+                linewidth=2,
+                alpha=0.7,
+            )
+
     # Plot normal distribution for team participants (blue solid line)
     if team_scores:
         # Calculate mean and standard deviation for team participants
@@ -803,9 +1086,14 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
             linewidth=2,
         )
 
-    # Get the maximum y value for filling background colors
-    ax = plt.gca()
-    ymax = ax.get_ylim()[1]
+    # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
+    plt.ylim(0, 1.0)
+
+    # Set consistent y-axis ticks
+    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+
+    # Get the maximum y value for filling background colors (use fixed value now)
+    ymax = 1.0
 
     # Draw vertical lines at cutoff values
     plt.axvline(
@@ -848,7 +1136,16 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
     # Set labels and title
     plt.xlabel("Depersonalization Score", fontsize=12)
     plt.ylabel("Density", fontsize=12)
-    plt.title(f"Team {team_number} Depersonalization Score Distribution", fontsize=14)
+    # Add previous week information to title if available
+    if week_number >= 2 and previous_team_scores:
+        plt.title(
+            f"Team {team_number} Depersonalization Score Distribution (Week {week_number} vs Week {previous_week_number})",
+            fontsize=14,
+        )
+    else:
+        plt.title(
+            f"Team {team_number} Depersonalization Score Distribution", fontsize=14
+        )
 
     # Add legend with proper placement
     plt.legend(loc="upper right")
