@@ -67,6 +67,7 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
     # Collect BAT_primary scores for the specified week
     all_scores = []  # List to store scores from all participants
     team_scores = []  # List to store scores from the specified team
+    team_individual_scores = []  # List to store individual team member scores for bars
     week_key = f"{week_number}주차"
 
     # Collect previous week scores if week_number >= 2 (2주차 이후부터)
@@ -95,6 +96,9 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
                     and participant["team"] == f"상담 {team_number}팀"
                 ):
                     team_scores.append(score)
+                    team_individual_scores.append(
+                        score
+                    )  # Store individual scores for bars
 
         # Collect previous week data if week_number >= 2 and previous week data exists
         if week_number >= 2 and previous_week_key in participant["analysis"]:
@@ -167,6 +171,79 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
             linewidth=2,
         )
 
+    # Add individual participant bars (like in team2_bat_visualizer_new.py)
+    if team_individual_scores:
+        # 참가자 구분을 위한 색상 팔레트를 정의합니다
+        color_palette = [
+            "#E41A1C",  # Red
+            "#377EB8",  # Blue
+            "#4DAF4A",  # Green
+            "#984EA3",  # Purple
+            "#FF7F00",  # Orange
+            "#FFFF33",  # Yellow
+            "#F781BF",  # Pink
+            "#00CED1",  # Cyan
+            "#A65628",  # Brown
+            "#999999",  # Gray
+            "#6A5ACD",  # Dark Slate Blue
+            "#66C2A5",  # Teal
+        ]
+
+        # 각 참여자의 점수를 높이 0.2인 막대로 표시합니다
+        bar_height = 0.2
+        bar_width = 0.01  # 막대의 너비를 설정합니다
+
+        # 겹치는 막대를 방지하기 위해 점수별로 정렬하고 오프셋을 적용합니다
+        score_positions = []  # 각 점수의 실제 x 위치를 저장할 리스트
+
+        # 각 점수에 대해 막대를 그립니다
+        for i, score in enumerate(team_individual_scores):
+            # 색상을 순환하여 할당합니다
+            color = color_palette[i % len(color_palette)]
+
+            # 같은 점수 근처에 있는 다른 막대들과의 겹침을 방지하기 위한 오프셋 계산
+            x_position = score
+            offset_applied = False
+
+            # 기존에 그려진 막대들과 너무 가까운지 확인합니다
+            for existing_pos in score_positions:
+                if (
+                    abs(x_position - existing_pos) < bar_width * 3
+                ):  # 막대 너비의 1.2배 이내이면 겹침으로 판단
+                    # 작은 랜덤 오프셋을 적용합니다 (최대 ±0.02)
+                    offset = (i % 10 - 1) * 0.012
+                    x_position = score + offset
+                    offset_applied = True
+                    break
+
+            # 계산된 위치를 저장합니다
+            score_positions.append(x_position)
+
+            # 개별 참여자 점수를 막대로 표시합니다
+            plt.bar(
+                x_position,
+                bar_height,
+                width=bar_width,
+                color=color,
+                alpha=0.8,
+                # edgecolor="black",
+                # linewidth=1,
+                label=(
+                    f"Participant {i+1}"
+                ),  # 범례가 너무 길어지지 않도록 처음 5명만 표시
+            )
+
+            # 막대 위에 점수 값을 표시합니다 (오프셋 적용시 원래 점수 표시)
+            # plt.text(
+            #     x_position,
+            #     bar_height + 0.02,
+            #     f"{score:.2f}",
+            #     ha="center",
+            #     va="bottom",
+            #     fontsize=8,
+            #     fontweight="bold",
+            # )
+
     # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
     plt.ylim(0, 1.0)
 
@@ -211,8 +288,8 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
     else:
         plt.title(f"Team {team_number} Burnout Score Distribution", fontsize=14)
 
-    # Add legend with proper placement
-    plt.legend(loc="upper right")
+    # Add legend with proper placement (adjust for individual bars)
+    plt.legend(loc="upper right", fontsize=8, ncol=2)
 
     # Calculate statistics for display box
     if team_scores:
@@ -956,7 +1033,7 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
 
 def generate_depersonalization_distribution_graph(week_number=0, team_number=None):
     """
-    Generate a distribution graph for depersonalization (정서적 거리감) scores for a specific week
+    Generate a distribution graph for depersonalization (정서적 거리) scores for a specific week
 
     Parameters:
     - week_number (int): Week number (0, 2, 4, etc.)
