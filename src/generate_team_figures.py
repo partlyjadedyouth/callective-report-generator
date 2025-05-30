@@ -234,15 +234,15 @@ def generate_bat_primary_distribution_graph(week_number=0, team_number=None):
             )
 
             # 막대 위에 점수 값을 표시합니다 (오프셋 적용시 원래 점수 표시)
-            # plt.text(
-            #     x_position,
-            #     bar_height + 0.02,
-            #     f"{score:.2f}",
-            #     ha="center",
-            #     va="bottom",
-            #     fontsize=8,
-            #     fontweight="bold",
-            # )
+            plt.text(
+                x_position,
+                bar_height + 0.02,
+                f"{score:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                fontweight="bold",
+            )
 
     # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
     plt.ylim(0, 1.0)
@@ -522,15 +522,15 @@ def generate_exhaustion_distribution_graph(week_number=0, team_number=None):
             )
 
             # 막대 위에 점수 값을 표시합니다 (주석 처리)
-            # plt.text(
-            #     x_position,
-            #     bar_height + 0.02,
-            #     f"{score:.2f}",
-            #     ha="center",
-            #     va="bottom",
-            #     fontsize=8,
-            #     fontweight="bold",
-            # )
+            plt.text(
+                x_position,
+                bar_height + 0.02,
+                f"{score:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                fontweight="bold",
+            )
 
     # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
     plt.ylim(0, 1.0)
@@ -821,15 +821,15 @@ def generate_cognitive_regulation_distribution_graph(week_number=0, team_number=
             )
 
             # 막대 위에 점수 값을 표시합니다 (주석 처리)
-            # plt.text(
-            #     x_position,
-            #     bar_height + 0.02,
-            #     f"{score:.2f}",
-            #     ha="center",
-            #     va="bottom",
-            #     fontsize=8,
-            #     fontweight="bold",
-            # )
+            plt.text(
+                x_position,
+                bar_height + 0.02,
+                f"{score:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                fontweight="bold",
+            )
 
     # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
     plt.ylim(0, 1.0)
@@ -1137,15 +1137,15 @@ def generate_emotional_regulation_distribution_graph(week_number=0, team_number=
             )
 
             # 막대 위에 점수 값을 표시합니다 (주석 처리)
-            # plt.text(
-            #     x_position,
-            #     bar_height + 0.02,
-            #     f"{score:.2f}",
-            #     ha="center",
-            #     va="bottom",
-            #     fontsize=8,
-            #     fontweight="bold",
-            # )
+            plt.text(
+                x_position,
+                bar_height + 0.02,
+                f"{score:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                fontweight="bold",
+            )
 
     # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
     plt.ylim(0, 1.0)
@@ -1453,15 +1453,15 @@ def generate_depersonalization_distribution_graph(week_number=0, team_number=Non
             )
 
             # 막대 위에 점수 값을 표시합니다 (주석 처리)
-            # plt.text(
-            #     x_position,
-            #     bar_height + 0.02,
-            #     f"{score:.2f}",
-            #     ha="center",
-            #     va="bottom",
-            #     fontsize=8,
-            #     fontweight="bold",
-            # )
+            plt.text(
+                x_position,
+                bar_height + 0.02,
+                f"{score:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                fontweight="bold",
+            )
 
     # Standardize y-axis limits to be between 0 and 1.0 for all team graphs
     plt.ylim(0, 1.0)
