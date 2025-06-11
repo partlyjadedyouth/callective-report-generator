@@ -4,7 +4,7 @@
 """
 BAT Primary 분포 변화 분석 스크립트
 
-이 스크립트는 0주차와 2주차 사이에 BAT Primary 점수의 분포 카테고리가
+이 스크립트는 2주차와 4주차 사이에 BAT Primary 점수의 분포 카테고리가
 변경된 참가자(정상→준위험, 준위험→위험 등)를 식별하고,
 그들의 이름, 소속 팀, 점수 변동량을 출력합니다.
 """
@@ -66,22 +66,22 @@ def main():
 
         analysis = participant["analysis"]  # 참가자 분석 데이터
 
-        # 0주차와 2주차 데이터가 모두 있는지 확인
-        if "0주차" in analysis and "2주차" in analysis:
-            # 0주차와 2주차의 BAT Primary 점수 추출
-            score_week0 = analysis["0주차"]["category_averages"].get("BAT_primary")
+        # 2주차와 4주차 데이터가 모두 있는지 확인
+        if "2주차" in analysis and "4주차" in analysis:
+            # 2주차와 4주차의 BAT Primary 점수 추출
             score_week2 = analysis["2주차"]["category_averages"].get("BAT_primary")
+            score_week4 = analysis["4주차"]["category_averages"].get("BAT_primary")
 
             # 두 점수 모두 있는지 확인
-            if score_week0 is not None and score_week2 is not None:
+            if score_week2 is not None and score_week4 is not None:
                 # 위험 수준 결정
-                risk_level_week0 = get_risk_level(score_week0)
                 risk_level_week2 = get_risk_level(score_week2)
+                risk_level_week4 = get_risk_level(score_week4)
 
                 # 위험 수준이 변경되었는지 확인
-                if risk_level_week0 != risk_level_week2:
+                if risk_level_week2 != risk_level_week4:
                     # 변동량 계산
-                    score_change = score_week2 - score_week0
+                    score_change = score_week4 - score_week2
 
                     # 결과 추가
                     changed_participants.append(
@@ -89,11 +89,11 @@ def main():
                             "name": name,
                             "team": team,  # 팀 정보 추가
                             "unique_id": unique_id,  # 고유 ID 추가
-                            "week0_score": score_week0,
                             "week2_score": score_week2,
+                            "week4_score": score_week4,
                             "score_change": score_change,
-                            "week0_risk_level": risk_level_week0,
                             "week2_risk_level": risk_level_week2,
+                            "week4_risk_level": risk_level_week4,
                         }
                     )
 
@@ -114,11 +114,11 @@ def main():
         header_format.format(
             "이름",
             "소속 팀",
-            "0주차 점수",
             "2주차 점수",
+            "4주차 점수",
             "변동량",
-            "0주차 분류",
             "2주차 분류",
+            "4주차 분류",
         )
     )
     print("-" * 80)
@@ -136,11 +136,11 @@ def main():
             data_format.format(
                 p["name"],
                 p["team"],
-                p["week0_score"],
                 p["week2_score"],
+                p["week4_score"],
                 change_str,
-                p["week0_risk_level"],
                 p["week2_risk_level"],
+                p["week4_risk_level"],
             )
         )
 

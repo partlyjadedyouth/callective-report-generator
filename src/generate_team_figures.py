@@ -1587,7 +1587,16 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
     # Collect stress scores for the specified week
     all_scores = []  # List to store scores from all participants
     team_scores = []  # List to store scores from the specified team
+    team_individual_scores = []  # List to store individual team member scores for bars
     week_key = f"{week_number}주차"
+
+    # Collect previous week scores if week_number >= 4 (4주차 이후부터)
+    previous_all_scores = []  # List to store previous week scores from all participants
+    previous_team_scores = (
+        []
+    )  # List to store previous week scores from the specified team
+    previous_week_number = week_number - 4  # 지난 검사 (4주 전)
+    previous_week_key = f"{previous_week_number}주차"
 
     for participant in analysis_data["participants"]:
         # Check if participant has data for the specified week
@@ -1609,6 +1618,32 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
                         and participant["team"] == f"상담 {team_number}팀"
                     ):
                         team_scores.append(score)
+                        team_individual_scores.append(
+                            score
+                        )  # Store individual scores for bars
+            except (KeyError, TypeError):
+                # Skip if the score is not available
+                continue
+
+        # Collect previous week data if week_number >= 4 and previous week data exists
+        if week_number >= 4 and previous_week_key in participant["analysis"]:
+            # Get the stress score for this participant from previous week
+            try:
+                # Access the stress score from category_averages for previous week
+                previous_score = participant["analysis"][previous_week_key][
+                    "category_averages"
+                ].get("stress")
+
+                if previous_score is not None:
+                    # Add to previous week all scores list
+                    previous_all_scores.append(previous_score)
+
+                    # If team is specified, collect previous week scores for that team
+                    if (
+                        team_number is not None
+                        and participant["team"] == f"상담 {team_number}팀"
+                    ):
+                        previous_team_scores.append(previous_score)
             except (KeyError, TypeError):
                 # Skip if the score is not available
                 continue
@@ -1634,6 +1669,24 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
             linewidth=1.5,
         )
 
+    # Plot previous week data if available (gray lines)
+    if week_number >= 4:
+        # Plot previous week normal distribution for team participants (gray solid line)
+        if previous_team_scores:
+            # Calculate mean and standard deviation for previous week team participants
+            mu_prev_team = np.mean(previous_team_scores)
+            std_prev_team = np.std(previous_team_scores)
+            # Plot previous week normal distribution curve (gray solid line)
+            plt.plot(
+                x,
+                stats.norm.pdf(x, mu_prev_team, std_prev_team),
+                color="gray",
+                linestyle="-",
+                label=f"Team {team_number} (Week {previous_week_number})",
+                linewidth=2,
+                alpha=0.7,
+            )
+
     # Plot normal distribution for team participants (blue solid line)
     if team_scores:
         # Calculate mean and standard deviation for team participants
@@ -1648,9 +1701,106 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
             linewidth=2,
         )
 
-    # Get the maximum y value for filling background colors
-    ax = plt.gca()
-    ymax = ax.get_ylim()[1]
+    # Add individual participant bars (like in BAT primary visualizer)
+    if team_individual_scores:
+        # 참가자 구분을 위한 색상 팔레트를 정의합니다
+        color_palette = [
+            "#E41A1C",  # Red
+            "#377EB8",  # Blue
+            "#4DAF4A",  # Green
+            "#984EA3",  # Purple
+            "#FF7F00",  # Orange
+            "#FFFF33",  # Yellow
+            "#F781BF",  # Pink
+            "#00CED1",  # Cyan
+            "#A65628",  # Brown
+            "#999999",  # Gray
+            "#6A5ACD",  # Dark Slate Blue
+            "#66C2A5",  # Teal
+        ]
+
+        # 각 참여자의 점수를 높이 0.008인 막대로 표시합니다 (stress는 0-100 범위이므로 높이 조정)
+        bar_height = 0.008
+        bar_width = (
+            0.8  # 막대의 너비를 설정합니다 (stress는 0-100 범위이므로 너비 조정)
+        )
+
+        # 겹치는 막대를 방지하기 위해 점수별로 정렬하고 오프셋을 적용합니다
+        score_positions = []  # 각 점수의 실제 x 위치를 저장할 리스트
+
+        # 각 점수에 대해 막대를 그립니다
+        for i, score in enumerate(team_individual_scores):
+            # 색상을 순환하여 할당합니다
+            color = color_palette[i % len(color_palette)]
+
+            # 같은 점수 근처에 있는 다른 막대들과의 겹침을 방지하기 위한 오프셋 계산
+            x_position = score
+            offset_applied = False
+
+            # 기존에 그려진 막대들과 너무 가까운지 확인합니다
+            for existing_pos in score_positions:
+                if (
+                    abs(x_position - existing_pos) < bar_width * 3
+                ):  # 막대 너비의 3배 이내이면 겹침으로 판단
+                    # 작은 랜덤 오프셋을 적용합니다
+                    offset = (i % 10 - 1) * 0.5
+                    x_position = score + offset
+                    offset_applied = True
+                    break
+
+            # 계산된 위치를 저장합니다
+            score_positions.append(x_position)
+
+            # 개별 참여자 점수를 막대로 표시합니다
+            plt.bar(
+                x_position,
+                bar_height,
+                width=bar_width,
+                color=color,
+                alpha=0.8,
+                # edgecolor="black",
+                # linewidth=1,
+                label=(f"Participant {i+1}"),  # 모든 참가자를 범례에 표시
+            )
+
+            # 막대 위에 점수 값을 표시합니다 (오프셋 적용시 원래 점수 표시)
+            plt.text(
+                x_position,
+                bar_height + 0.0005,
+                f"{score:.1f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                fontweight="bold",
+            )
+
+    # Standardize y-axis limits to be between 0 and 0.05 for all team graphs (adjusted for 0-100 range)
+    plt.ylim(0, 0.12)
+
+    # Set consistent y-axis ticks
+    plt.yticks(
+        [
+            0,
+            0.01,
+            0.02,
+            0.03,
+            0.04,
+            0.05,
+            0.06,
+            0.07,
+            0.08,
+            0.09,
+            0.1,
+            0.11,
+            0.12,
+            # 0.13,
+            # 0.14,
+            # 0.15,
+        ]
+    )
+
+    # Get the maximum y value for filling background colors (use fixed value now)
+    ymax = 0.12
 
     # Draw vertical lines at cutoff values
     plt.axvline(x=cutoff_stress[0], color="gray", linestyle="--", alpha=0.5)
@@ -1678,10 +1828,17 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
     # Set labels and title
     plt.xlabel("Stress Score", fontsize=12)
     plt.ylabel("Density", fontsize=12)
-    plt.title(f"Team {team_number} Stress Score Distribution", fontsize=14)
+    # Add previous week information to title if available
+    if week_number >= 4 and previous_team_scores:
+        plt.title(
+            f"Team {team_number} Stress Score Distribution (Week {week_number} vs Week {previous_week_number})",
+            fontsize=14,
+        )
+    else:
+        plt.title(f"Team {team_number} Stress Score Distribution", fontsize=14)
 
-    # Add legend with proper placement
-    plt.legend(loc="upper right")
+    # Add legend with proper placement (adjust for individual bars)
+    plt.legend(loc="upper right", fontsize=8, ncol=2)
 
     # Calculate statistics for display box
     if team_scores:
@@ -1698,7 +1855,7 @@ def generate_stress_distribution_graph(week_number=0, team_number=None):
     plt.xlim(0, 100)  # Fixed range for stress scores that exist from 0 to 100
 
     # Add tick marks at each 10 points
-    plt.xticks(range(0, 101, 10))
+    plt.xticks(range(0, 101, 20))  # Show ticks every 20 points for cleaner appearance
 
     # Adjust layout
     plt.tight_layout()
