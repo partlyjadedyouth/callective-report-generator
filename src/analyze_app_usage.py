@@ -322,19 +322,26 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
                     if emotion in positive_emotions:
                         positive_emotion_count += 1
                         daily_emotion_categories[date]["positive"] += 1
-                        time_range_emotion_categories[time_range]["positive"] += 1
-                        time_range_detailed_emotions[time_range]["positive"][
-                            "count"
-                        ] += 1
+
+                        # Only count in time range categories if it's not weekend (Saturday or Sunday)
+                        if day_of_week not in ["Saturday", "Sunday"]:
+                            time_range_emotion_categories[time_range]["positive"] += 1
+                            time_range_detailed_emotions[time_range]["positive"][
+                                "count"
+                            ] += 1
+
+                            # Count factors for this time range (only on weekdays)
+                            for factor in factors:
+                                time_range_detailed_emotions[time_range]["positive"][
+                                    "factors"
+                                ][factor] += 1
+
                         day_of_week_emotion_categories[day_of_week]["positive"][
                             "count"
                         ] += 1
 
-                        # Count factors for this time range
+                        # Count factors for day of week (includes all days)
                         for factor in factors:
-                            time_range_detailed_emotions[time_range]["positive"][
-                                "factors"
-                            ][factor] += 1
                             day_of_week_emotion_categories[day_of_week]["positive"][
                                 "factors"
                             ][factor] += 1
@@ -342,19 +349,26 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
                     elif emotion in negative_emotions:
                         negative_emotion_count += 1
                         daily_emotion_categories[date]["negative"] += 1
-                        time_range_emotion_categories[time_range]["negative"] += 1
-                        time_range_detailed_emotions[time_range]["negative"][
-                            "count"
-                        ] += 1
+
+                        # Only count in time range categories if it's not weekend (Saturday or Sunday)
+                        if day_of_week not in ["Saturday", "Sunday"]:
+                            time_range_emotion_categories[time_range]["negative"] += 1
+                            time_range_detailed_emotions[time_range]["negative"][
+                                "count"
+                            ] += 1
+
+                            # Count factors for this time range (only on weekdays)
+                            for factor in factors:
+                                time_range_detailed_emotions[time_range]["negative"][
+                                    "factors"
+                                ][factor] += 1
+
                         day_of_week_emotion_categories[day_of_week]["negative"][
                             "count"
                         ] += 1
 
-                        # Count factors for this time range
+                        # Count factors for day of week (includes all days)
                         for factor in factors:
-                            time_range_detailed_emotions[time_range]["negative"][
-                                "factors"
-                            ][factor] += 1
                             day_of_week_emotion_categories[day_of_week]["negative"][
                                 "factors"
                             ][factor] += 1

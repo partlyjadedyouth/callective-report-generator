@@ -32,6 +32,9 @@ from cutoff_values import (
     CUTOFF_OCCUPATIONAL_CLIMATE_MALE,
 )
 
+# 참가자 ID 관리 모듈 임포트
+from participant_id_manager import generate_unique_id
+
 # 파일 저장 전 디렉토리 경로 확인 및 생성
 # os.makedirs()는 해당 경로의 모든 디렉토리를 생성함
 # exist_ok=True 옵션은 디렉토리가 이미 존재해도 오류를 발생시키지 않음
@@ -61,6 +64,9 @@ env = Environment(loader=FileSystemLoader("templates/"))
 # 템플릿 파일 로드
 template = env.get_template("personal_template.html")
 
+# 참가자 고유 ID 맵 생성 (동명이인 구분용)
+participant_ids = {}
+
 # 각 참여자에 대해 반복 수행
 participants = analysis_data["participants"]
 
@@ -69,6 +75,13 @@ for participant in participants:
     name = participant["name"]
     team = participant["team"]
     role = participant["role"]
+
+    # 고유 ID 생성
+    unique_id = generate_unique_id(name, team)
+
+    # 고유 ID를 사용하여 참가자 정보 저장
+    participant_ids[unique_id] = participant
+
     week = (len(participant["analysis"]) - 1) * 2
 
     # 직무 스트레스와 감정노동 데이터 표시 여부 결정
@@ -162,14 +175,15 @@ for participant in participants:
         if week > 0
         else 0
     )
+    # 스트레스와 감정노동은 2회 전 회차(week - 4)와 비교
     stress_last_week = (
-        participant["analysis"][f"{week - 2}주차"]["category_averages"]["stress"]
-        if week > 0
+        participant["analysis"][f"{week - 4}주차"]["category_averages"]["stress"]
+        if week >= 4
         else 0
     )
     emotional_labor_last_week = (
-        participant["analysis"][f"{week - 2}주차"]["type_averages"]["emotional_labor"]
-        if week > 0
+        participant["analysis"][f"{week - 4}주차"]["type_averages"]["emotional_labor"]
+        if week >= 4
         else []
     )
 
@@ -206,6 +220,7 @@ for participant in participants:
         "name": name,
         "team": team,
         "role": role,
+        "unique_id": unique_id,  # 고유 ID 추가
         "week": week,
         "gender": gender,
         "show_stress_and_emotional_labor": show_stress_and_emotional_labor,  # 직무 스트레스와 감정노동 데이터 표시 여부

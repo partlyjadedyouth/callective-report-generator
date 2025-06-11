@@ -161,7 +161,7 @@
                     {% set current_score = participant
                       .analysis[config.week_num ~ "주차"]
                       .category_averages[config.score_key] %}
-                    {% set bar_color_class_bp_weekly = 'bg-green-400' if current_score <= config.cutoff[0]
+                    {% set bar_color_class_bp_weekly = 'bg-gray-400' if current_score is none else 'bg-green-400' if current_score <= config.cutoff[0]
                     else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                     <div class="flex flex-col items-center w-full">
                       <div class="w-full rounded-lg {{ bar_color_class_bp_weekly }} h-5 mb-1">&nbsp;</div>
@@ -318,7 +318,7 @@ cutoff_burnout_emotional_regulation[0] else 'text-yellow-600' if company_burnout
                         .type_averages
                         .BAT_primary
                         .get("정서적 조절", 0) %}
-                      {% set bar_color_class_bs_weekly = 'bg-green-400' if current_score <= config.cutoff[0]
+                      {% set bar_color_class_bs_weekly = 'bg-gray-400' if current_score is none else 'bg-green-400' if current_score <= config.cutoff[0]
 else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                       <div class="flex flex-col items-center w-full">
                         <div class="w-full rounded-lg {{ bar_color_class_bs_weekly }} h-5 mb-1">&nbsp;</div>
@@ -401,7 +401,7 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                   <hr class="w-full border-t border-gray-300 mb-3">
 
                   <!-- 두번째 행 -->
-                  {% if week > 0 %}
+                  {% if week >= 4 %}
                     <div class="flex justify-between mb-3">
                       <div class="font-medium">지난 설문 대비</div>
                       {% set diff_color_class_stress = 'text-red-600' if stress_this_week > stress_last_week else
@@ -473,7 +473,7 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                         {% set current_score = participant
                           .analysis[config.week_num ~ "주차"]
                           .category_averages[config.score_key] %}
-                        {% set bar_color_class_stress_weekly = 'bg-green-400' if current_score <= config.cutoff[0]
+                        {% set bar_color_class_stress_weekly = 'bg-gray-400' if current_score is none else 'bg-green-400' if current_score <= config.cutoff[0]
     else 'bg-orange-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                         <div class="flex flex-col items-center w-full">
                           <div class="w-full rounded-lg {{ bar_color_class_stress_weekly }} h-5 mb-1">&nbsp;</div>
@@ -501,7 +501,7 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                   <span class="text-xs font-medium">본인</span>
                 </div>
 
-                {% if week > 0 %}
+                {% if week >= 4 %}
                   <div class="flex items-center">
                     <div class="w-4 h-1 bg-blue-400 mr-2"></div>
                     <span class="text-xs font-medium">지난 설문</span>
@@ -536,7 +536,7 @@ else 'bg-yellow-400' if current_score <=config.cutoff[1] else 'bg-red-400' %}
                       <div class="absolute left-0 w-full h-1 bg-red-500" style="bottom: {{ category_data.cutoff_val }}%; transform: translateY(50%);"></div>
 
                       <!-- Last Survey Score Line (Blue) - Conditional Display -->
-                      {% if week > 0 and emotional_labor_last_week and emotional_labor_last_week[category_data.key] is
+                      {% if week >= 4 and emotional_labor_last_week and emotional_labor_last_week[category_data.key] is
                       defined and emotional_labor_last_week[category_data.key] is not none %}
                         <div class="absolute left-0 w-full h-1 bg-blue-400" style="bottom: {{ emotional_labor_last_week[category_data.key] }}%; transform: translateY(50%);"></div>
                       {% endif %}
