@@ -175,14 +175,15 @@ for participant in participants:
         if week > 0
         else 0
     )
+    # 스트레스와 감정노동은 2회 전 회차(week - 4)와 비교
     stress_last_week = (
-        participant["analysis"][f"{week - 2}주차"]["category_averages"]["stress"]
-        if week > 0
+        participant["analysis"][f"{week - 4}주차"]["category_averages"]["stress"]
+        if week >= 4
         else 0
     )
     emotional_labor_last_week = (
-        participant["analysis"][f"{week - 2}주차"]["type_averages"]["emotional_labor"]
-        if week > 0
+        participant["analysis"][f"{week - 4}주차"]["type_averages"]["emotional_labor"]
+        if week >= 4
         else []
     )
 
