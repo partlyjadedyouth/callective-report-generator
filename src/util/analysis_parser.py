@@ -59,7 +59,7 @@ def extract_weekly_analysis_scores(week_data):
     scores = {}  # Initialize scores dictionary
 
     # Extract BAT_primary scores
-    scores["BAT_primary"] = week_data["category_averages"].get("BAT_primary", None)
+    scores["번아웃 핵심증상"] = week_data["category_averages"].get("BAT_primary", None)
     bat_primary_types = week_data["type_averages"].get("BAT_primary", {})
     scores.update(
         {
