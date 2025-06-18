@@ -76,6 +76,9 @@ for participant in participants:
     team = participant["team"]
     role = participant["role"]
 
+    # For debugging
+    print(f"name: {name}, team: {team}, role: {role}")
+
     # 고유 ID 생성
     unique_id = generate_unique_id(name, team)
 

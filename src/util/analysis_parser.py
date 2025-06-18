@@ -18,17 +18,19 @@ def load_data_files():
     return analysis, participants_csv
 
 
-def create_name_to_symbol_mapping(participants_csv):
-    """Create mapping dictionary from participant names to identification symbols (P1, P2, ...)"""
+def create_id_to_symbol_mapping(participants_csv):
+    """Create mapping dictionary from participant IDs to identification symbols (P1, P2, ...)"""
     return dict(
         zip(
-            participants_csv["성함"].str.strip(),  # Strip whitespace from names
+            participants_csv["아이디"]
+            .astype(str)
+            .str.strip(),  # Convert ID to string and strip whitespace
             participants_csv["식별 기호"].str.strip(),  # Strip whitespace from symbols
         )
     )
 
 
-def extract_participant_basic_info(analysis, name_to_symbol_mapping):
+def extract_participant_basic_info(analysis, id_to_symbol_mapping):
     """Extract basic participant information and create DataFrame"""
     participants_data = []  # Initialize list for participant data
 
@@ -36,9 +38,9 @@ def extract_participant_basic_info(analysis, name_to_symbol_mapping):
     for participant in analysis["participants"]:
         participant_info = {
             "이름": participant["name"],  # Participant name
-            "식별기호": name_to_symbol_mapping.get(
-                participant["name"], "Unknown"
-            ),  # P1, P2, ... symbol
+            "식별기호": id_to_symbol_mapping.get(
+                str(participant["id"]), "Unknown"
+            ),  # P1, P2, ... symbol using ID mapping
             "ID": participant["id"],  # Original ID
             "팀": participant["team"],  # Team information
             "역할": participant["role"],  # Role information
@@ -48,8 +50,8 @@ def extract_participant_basic_info(analysis, name_to_symbol_mapping):
 
     # Sort by identification symbol
     participants_data.sort(
-        key=lambda x: int(x["식별기호"][1:])
-    )  # Sort by number after "P"
+        key=lambda x: int(x["식별기호"][1:]) if x["식별기호"] != "Unknown" else 999
+    )  # Sort by number after "P", handle Unknown cases
 
     return pd.DataFrame(participants_data)
 
@@ -109,17 +111,17 @@ def extract_weekly_analysis_scores(week_data):
     return scores
 
 
-def create_weekly_analysis_dataframe(analysis, name_to_symbol_mapping):
+def create_weekly_analysis_dataframe(analysis, id_to_symbol_mapping):
     """Create DataFrame with weekly analysis data for all participants"""
     weekly_analysis_data = []  # Initialize list for weekly data
 
     # Process each participant
     for participant in analysis["participants"]:
         participant_name = participant["name"]  # Get participant name
-        participant_symbol = name_to_symbol_mapping.get(
-            participant_name, "Unknown"
-        )  # Get P1, P2, ... symbol
         participant_id = participant["id"]  # Get participant ID
+        participant_symbol = id_to_symbol_mapping.get(
+            str(participant_id), "Unknown"
+        )  # Get P1, P2, ... symbol using ID mapping
 
         # Process each week for this participant
         for week, week_data in participant["analysis"].items():
@@ -181,14 +183,14 @@ if __name__ == "__main__":
     # Load data files
     analysis, participants_csv = load_data_files()
 
-    # Create name to symbol mapping
-    name_to_symbol_mapping = create_name_to_symbol_mapping(participants_csv)
+    # Create ID to symbol mapping (changed from name to ID mapping)
+    id_to_symbol_mapping = create_id_to_symbol_mapping(participants_csv)
 
     # Create basic participant info DataFrame
-    df_basic = extract_participant_basic_info(analysis, name_to_symbol_mapping)
+    df_basic = extract_participant_basic_info(analysis, id_to_symbol_mapping)
 
     # Create weekly analysis DataFrame
-    df = create_weekly_analysis_dataframe(analysis, name_to_symbol_mapping)
+    df = create_weekly_analysis_dataframe(analysis, id_to_symbol_mapping)
 
     # Print summary
     print_dataframe_summary(df)
