@@ -25,6 +25,8 @@ from cutoff_values import (
     CUTOFF_BURNOUT_PRIMARY,
     CUTOFF_STRESS,  # Import cutoff values for stress risk assessment
     CUTOFF_STRESS_MALE,  # Import male cutoff values for stress risk assessment
+    CUTOFF_EMOTIONAL_LABOR,  # Import cutoff values for emotional labor risk assessment (female)
+    CUTOFF_EMOTIONAL_LABOR_MALE,  # Import cutoff values for emotional labor risk assessment (male)
 )  # Import cutoff values for burnout risk assessment
 
 # 참가자 ID 관리 모듈 임포트
@@ -387,6 +389,15 @@ def generate_group_analysis(all_participants):
                 "위험": 0,  # Risk - stress > CUTOFF_STRESS[1]
             }
 
+            # Initialize counters for emotional labor risk levels by subcategory
+            emotional_labor_risk_counts = {
+                "감정조절의 노력 및 다양성": {"정상": 0, "위험": 0},  # Index 0
+                "고객응대의 과부하 및 갈등": {"정상": 0, "위험": 0},  # Index 1
+                "감정부조화 및 손상": {"정상": 0, "위험": 0},  # Index 2
+                "조직의 감시 및 모니터링": {"정상": 0, "위험": 0},  # Index 3
+                "조직의 지지 및 보호체계": {"정상": 0, "위험": 0},  # Index 4
+            }
+
             # Collect data from all participants in this group for this week
             for participant_data in filtered_participants.values():
                 if week in participant_data["analysis"]:
@@ -432,6 +443,38 @@ def generate_group_analysis(all_participants):
                             if value is not None:
                                 type_scores[category][type_name].append(value)
 
+                                # Count emotional labor risk levels for each subcategory
+                                if (
+                                    category == "emotional_labor"
+                                    and type_name in emotional_labor_risk_counts
+                                ):
+                                    # Use male cutoff for male participants, female cutoff for others
+                                    cutoff = (
+                                        CUTOFF_EMOTIONAL_LABOR_MALE
+                                        if gender == "남성"
+                                        else CUTOFF_EMOTIONAL_LABOR
+                                    )
+
+                                    # Map emotional labor subcategory to cutoff index
+                                    subcategory_index = {
+                                        "감정조절의 노력 및 다양성": 0,
+                                        "고객응대의 과부하 및 갈등": 1,
+                                        "감정부조화 및 손상": 2,
+                                        "조직의 감시 및 모니터링": 3,
+                                        "조직의 지지 및 보호체계": 4,
+                                    }
+
+                                    if type_name in subcategory_index:
+                                        index = subcategory_index[type_name]
+                                        if value >= cutoff[index]:
+                                            emotional_labor_risk_counts[type_name][
+                                                "위험"
+                                            ] += 1
+                                        else:
+                                            emotional_labor_risk_counts[type_name][
+                                                "정상"
+                                            ] += 1
+
             # Calculate category averages for this group and week
             for category, scores in category_scores.items():
                 if scores:
@@ -457,6 +500,9 @@ def generate_group_analysis(all_participants):
 
             # Add stress risk level counts to the week data
             week_data["risk_levels"]["stress"] = stress_risk_counts
+
+            # Add emotional labor risk level counts to the week data
+            week_data["risk_levels"]["emotional_labor"] = emotional_labor_risk_counts
 
             # Add this week's analysis to the group's analysis
             group_analysis[group_name]["analysis"][week] = week_data

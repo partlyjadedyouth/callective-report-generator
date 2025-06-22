@@ -263,9 +263,9 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
             for row in reader:
                 # Extract ID, date, and factors
                 user_id = row.get("ID", "").strip()
-                date_str = row.get("날짜 / 시간", "").strip()
-                factors_str = row.get("선택한 요인", "").strip()
-                emotion = row.get("선택한 감정", "").strip()
+                date_str = row.get("날짜_시간", "").strip()
+                factors_str = row.get("선택한_요인", "").strip()
+                emotion = row.get("선택한_감정", "").strip()
 
                 # Skip rows with missing IDs or dates or if the ID is not in the valid IDs list
                 if not user_id or not date_str or user_id not in valid_ids:
@@ -488,4 +488,4 @@ if __name__ == "__main__":
     Example usage:
     python src/analyze_app_usage.py
     """
-    analyze_app_usage(0)  # Analyze data for week 0 by default
+    analyze_app_usage(6)  # Analyze data for week 6 by default
