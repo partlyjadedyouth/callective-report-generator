@@ -193,11 +193,11 @@ def main():
     메인 실행 함수
     """
     # 데이터 파일 경로
-    data_file = "data/analysis/app_analysis_6주차.json"
+    data_file = "data/analysis/app_analysis_8주차.json"
 
     try:
         # JSON 데이터 로드
-        print("6주차 앱 분석 데이터를 로딩 중...")
+        print("8주차 앱 분석 데이터를 로딩 중...")
         data = load_app_analysis_data(data_file)
         print(f"총 {len(data['emotion_records'])}개의 감정 기록을 발견했습니다.")
 

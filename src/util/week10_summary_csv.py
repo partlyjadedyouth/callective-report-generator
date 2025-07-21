@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-6주차 팀별 BAT 점수 요약 CSV 출력 스크립트
+10주차 팀별 BAT 점수 요약 CSV 출력 스크립트
 
-이 스크립트는 analysis.json 파일에서 6주차 데이터를 읽어
+이 스크립트는 analysis.json 파일에서 10주차 데이터를 읽어
 팀별 BAT 점수와 위험 수준별 인원수를 CSV 형식으로 출력합니다.
 """
 
@@ -83,30 +83,30 @@ def load_analysis_data():
         sys.exit(1)
 
 
-def extract_week6_data(analysis_data):
+def extract_week8_data(analysis_data):
     """
-    6주차 데이터에서 팀별 BAT 점수를 추출하는 함수
+    10주차 데이터에서 팀별 BAT 점수를 추출하는 함수
 
     Args:
         analysis_data (dict): 분석 데이터
 
     Returns:
-        dict: 팀별 6주차 BAT 점수 데이터
+        dict: 팀별 10주차 BAT 점수 데이터
     """
     # 결과를 저장할 딕셔너리를 초기화합니다
-    week6_data = {}
+    week8_data = {}
 
     # groups 데이터가 있는지 확인합니다
     if "groups" not in analysis_data:
         print("오류: groups 데이터를 찾을 수 없습니다.")
-        return week6_data
+        return week8_data
 
     groups = analysis_data["groups"]
 
     # 추출할 팀 목록을 정의합니다 (순서 중요)
     team_order = ["상담 1팀", "상담 2팀", "상담 3팀", "상담 4팀", "회사"]
 
-    # 각 팀/그룹에 대해 6주차 데이터를 추출합니다
+    # 각 팀/그룹에 대해 8주차 데이터를 추출합니다
     for team_name in team_order:
         # 팀 데이터가 존재하는지 확인합니다
         if team_name not in groups:
@@ -115,29 +115,29 @@ def extract_week6_data(analysis_data):
 
         team_data = groups[team_name]
 
-        # 6주차 분석 데이터가 있는지 확인합니다
-        if "analysis" not in team_data or "6주차" not in team_data["analysis"]:
-            print(f"경고: {team_name}의 6주차 데이터를 찾을 수 없습니다.")
+        # 10주차 분석 데이터가 있는지 확인합니다
+        if "analysis" not in team_data or "10주차" not in team_data["analysis"]:
+            print(f"경고: {team_name}의 10주차 데이터를 찾을 수 없습니다.")
             continue
 
-        week6_analysis = team_data["analysis"]["6주차"]
+        week8_analysis = team_data["analysis"]["10주차"]
 
         # 각 지표별 점수를 추출합니다
         team_scores = {}
 
         # BAT_primary 총점을 category_averages에서 가져옵니다
         if (
-            "category_averages" in week6_analysis
-            and "BAT_primary" in week6_analysis["category_averages"]
+            "category_averages" in week8_analysis
+            and "BAT_primary" in week8_analysis["category_averages"]
         ):
-            team_scores["총점"] = week6_analysis["category_averages"]["BAT_primary"]
+            team_scores["총점"] = week8_analysis["category_averages"]["BAT_primary"]
         else:
             team_scores["총점"] = None
             print(f"경고: {team_name}의 BAT_primary 총점을 찾을 수 없습니다.")
 
         # type_averages에서 세부 점수들을 가져옵니다
-        if "type_averages" in week6_analysis:
-            type_averages = week6_analysis["type_averages"]
+        if "type_averages" in week8_analysis:
+            type_averages = week8_analysis["type_averages"]
 
             # BAT_primary 세부 점수들을 추출합니다
             if "BAT_primary" in type_averages:
@@ -178,20 +178,20 @@ def extract_week6_data(analysis_data):
                 team_scores[key] = None
 
         # 팀 데이터를 결과 딕셔너리에 저장합니다
-        week6_data[team_name] = team_scores
+        week8_data[team_name] = team_scores
 
-    return week6_data
+    return week8_data
 
 
-def extract_week6_risk_levels(analysis_data):
+def extract_week8_risk_levels(analysis_data):
     """
-    6주차 데이터에서 팀별 BAT_primary 위험 수준별 인원수를 추출하는 함수
+    10주차 데이터에서 팀별 BAT_primary 위험 수준별 인원수를 추출하는 함수
 
     Args:
         analysis_data (dict): 분석 데이터
 
     Returns:
-        dict: 팀별 6주차 BAT_primary 위험 수준별 인원수 데이터
+        dict: 팀별 10주차 BAT_primary 위험 수준별 인원수 데이터
     """
     # 결과를 저장할 딕셔너리를 초기화합니다
     risk_data = {}
@@ -206,7 +206,7 @@ def extract_week6_risk_levels(analysis_data):
     # 추출할 팀 목록을 정의합니다 (순서 중요)
     team_order = ["상담 1팀", "상담 2팀", "상담 3팀", "상담 4팀", "회사"]
 
-    # 각 팀/그룹에 대해 6주차 위험 수준 데이터를 추출합니다
+    # 각 팀/그룹에 대해 10주차 위험 수준 데이터를 추출합니다
     for team_name in team_order:
         # 팀 데이터가 존재하는지 확인합니다
         if team_name not in groups:
@@ -215,21 +215,21 @@ def extract_week6_risk_levels(analysis_data):
 
         team_data = groups[team_name]
 
-        # 6주차 분석 데이터가 있는지 확인합니다
-        if "analysis" not in team_data or "6주차" not in team_data["analysis"]:
-            print(f"경고: {team_name}의 6주차 데이터를 찾을 수 없습니다.")
+        # 10주차 분석 데이터가 있는지 확인합니다
+        if "analysis" not in team_data or "10주차" not in team_data["analysis"]:
+            print(f"경고: {team_name}의 10주차 데이터를 찾을 수 없습니다.")
             continue
 
-        week6_analysis = team_data["analysis"]["6주차"]
+        week8_analysis = team_data["analysis"]["10주차"]
 
         # risk_levels 데이터에서 BAT_primary 위험 수준별 인원수를 추출합니다
         team_risk = {}
 
         if (
-            "risk_levels" in week6_analysis
-            and "BAT_primary" in week6_analysis["risk_levels"]
+            "risk_levels" in week8_analysis
+            and "BAT_primary" in week8_analysis["risk_levels"]
         ):
-            bat_primary_risk = week6_analysis["risk_levels"]["BAT_primary"]
+            bat_primary_risk = week8_analysis["risk_levels"]["BAT_primary"]
 
             # 각 위험 수준별 인원수를 추출합니다
             team_risk["정상"] = bat_primary_risk.get("정상", 0)
@@ -268,12 +268,12 @@ def format_score(score):
     return f"{score:.2f}"
 
 
-def print_csv_table(week6_data):
+def print_csv_table(week8_data):
     """
-    6주차 데이터를 CSV 형식으로 출력하는 함수
+    10주차 데이터를 CSV 형식으로 출력하는 함수
 
     Args:
-        week6_data (dict): 팀별 6주차 BAT 점수 데이터
+        week8_data (dict): 팀별 10주차 BAT 점수 데이터
     """
     # CSV 헤더를 정의합니다
     headers = [
@@ -296,7 +296,7 @@ def print_csv_table(week6_data):
     # 각 팀의 데이터를 CSV 형식으로 출력합니다
     for team_name in team_order:
         # 팀 데이터가 존재하는지 확인합니다
-        if team_name not in week6_data:
+        if team_name not in week8_data:
             print(f"경고: {team_name} 데이터가 없습니다.")
             continue
 
@@ -304,7 +304,7 @@ def print_csv_table(week6_data):
         display_name = "회사 전체" if team_name == "회사" else team_name
 
         # 각 지표의 점수를 가져옵니다
-        team_scores = week6_data[team_name]
+        team_scores = week8_data[team_name]
 
         # CSV 행을 구성합니다
         row = [
@@ -324,10 +324,10 @@ def print_csv_table(week6_data):
 
 def print_risk_levels_csv_table(risk_data):
     """
-    6주차 BAT_primary 위험 수준별 인원수를 CSV 형식으로 출력하는 함수
+    10주차 BAT_primary 위험 수준별 인원수를 CSV 형식으로 출력하는 함수
 
     Args:
-        risk_data (dict): 팀별 6주차 BAT_primary 위험 수준별 인원수 데이터
+        risk_data (dict): 팀별 10주차 BAT_primary 위험 수준별 인원수 데이터
     """
     # CSV 헤더를 정의합니다
     headers = ["", "정상", "준위험", "위험"]
@@ -367,30 +367,30 @@ def main():
     """
     메인 함수 - 스크립트의 진입점
     """
-    print("=== 6주차 팀별 BAT 점수 요약 (CSV 형식) ===\n")
+    print("=== 10주차 팀별 BAT 점수 요약 (CSV 형식) ===\n")
 
     try:
         # 분석 데이터를 로드합니다
         analysis_data = load_analysis_data()
 
-        # 6주차 점수 데이터를 추출합니다
-        print("6주차 점수 데이터를 추출하는 중...")
-        week6_data = extract_week6_data(analysis_data)
+        # 10주차 점수 데이터를 추출합니다
+        print("10주차 점수 데이터를 추출하는 중...")
+        week8_data = extract_week8_data(analysis_data)
 
-        # 6주차 위험 수준 데이터를 추출합니다
-        print("6주차 위험 수준 데이터를 추출하는 중...")
-        risk_data = extract_week6_risk_levels(analysis_data)
+        # 10주차 위험 수준 데이터를 추출합니다
+        print("10주차 위험 수준 데이터를 추출하는 중...")
+        risk_data = extract_week8_risk_levels(analysis_data)
 
         # 추출된 데이터가 있는지 확인합니다
-        if not week6_data and not risk_data:
-            print("추출된 6주차 데이터가 없습니다.")
+        if not week8_data and not risk_data:
+            print("추출된 10주차 데이터가 없습니다.")
             return
 
         # BAT 점수 표를 출력합니다
-        if week6_data:
-            print(f"총 {len(week6_data)}개 팀/그룹의 점수 데이터를 추출했습니다.\n")
+        if week8_data:
+            print(f"총 {len(week8_data)}개 팀/그룹의 점수 데이터를 추출했습니다.\n")
             print("=== BAT 점수 CSV 형식 출력 ===")
-            print_csv_table(week6_data)
+            print_csv_table(week8_data)
             print()
 
         # 위험 수준별 인원수 표를 출력합니다
