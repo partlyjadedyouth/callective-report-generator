@@ -479,13 +479,3 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
     except Exception as e:
         print(f"Error analyzing app usage data: {e}")
         return None
-
-
-if __name__ == "__main__":
-    """
-    Execute the analysis function when the script is run directly.
-
-    Example usage:
-    python src/analyze_app_usage.py
-    """
-    analyze_app_usage(6)  # Analyze data for week 6 by default
