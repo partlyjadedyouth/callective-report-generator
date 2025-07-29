@@ -132,7 +132,7 @@ def main():
     메인 실행 함수
     """
     # 데이터 파일 경로
-    data_file = "data/analysis/app_analysis_8주차.json"
+    data_file = "data/analysis/app_analysis_10주차.json"
 
     try:
         # JSON 데이터 로드

@@ -7,7 +7,7 @@ def convert_datetime_format():
     Function to read CSV file and convert datetime column to YYYY-MM-DD HH:mm:ss format
     """
     # Define the path to the CSV file that contains the data to be processed
-    csv_file_path = "data/csv/app_usage_data_10주차.csv"
+    csv_file_path = "data/csv/app_usage_data_12주차.csv"
 
     # Read the CSV file into a pandas DataFrame for data manipulation
     print(

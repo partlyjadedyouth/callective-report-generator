@@ -82,6 +82,9 @@ def get_week_code(week_number: int) -> str:
         2: "T2",  # 2주차 -> T2
         4: "T3",  # 4주차 -> T3
         6: "T4",  # 6주차 -> T4
+        8: "T5",  # 8주차 -> T5 (추가 주차)
+        10: "T6",  # 10주차 -> T6 (추가 주차)
+        12: "T7",  # 12주차 -> T7 (추가 주차)
     }
     return week_mapping.get(
         week_number, f"T{week_number//2 + 1}"
@@ -137,7 +140,7 @@ def analyze_weekly_emotions():
     results = defaultdict(lambda: defaultdict(lambda: {"positive": 0, "negative": 0}))
 
     # 분석할 주차 리스트
-    weeks = [0, 2, 4, 6]
+    weeks = [0, 2, 4, 6, 8, 10, 12]  # 주차 번호 리스트 (0, 2, 4, 6, 8, 10, 12)
 
     # 각 주차별로 분석 수행
     for week in weeks:
@@ -181,7 +184,7 @@ def analyze_weekly_emotions():
 
     for participant_code in sorted(results.keys(), key=sort_participant_key):
         # 각 주차별로 결과 출력
-        for week_code in ["T1", "T2", "T3", "T4"]:
+        for week_code in [f"T{week//2 + 1}" for week in weeks]:
             positive_count = results[participant_code][week_code][
                 "positive"
             ]  # 긍정 감정 횟수

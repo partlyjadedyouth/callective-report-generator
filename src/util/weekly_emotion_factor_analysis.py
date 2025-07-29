@@ -154,8 +154,8 @@ def analyze_emotion_factors_by_weekday(data: Dict) -> pd.DataFrame:
             if column_name in weekday_analysis[weekday]:
                 weekday_analysis[weekday][column_name] += 1
 
-        # 전체 레코드 수 증가 (각 레코드당 한 번만)
-        weekday_analysis[weekday]["합계"] += 1
+            # 전체 레코드 수 증가
+            weekday_analysis[weekday]["합계"] += 1
 
     # 데이터프레임으로 변환
     df = pd.DataFrame.from_dict(weekday_analysis, orient="index")
@@ -193,7 +193,7 @@ def main():
     메인 실행 함수
     """
     # 데이터 파일 경로
-    data_file = "data/analysis/app_analysis_8주차.json"
+    data_file = "data/analysis/app_analysis_10주차.json"
 
     try:
         # JSON 데이터 로드
