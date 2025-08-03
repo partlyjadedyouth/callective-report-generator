@@ -17,6 +17,8 @@ data/analysis/*
 data/reports/*
 # figures
 data/figures/*
+# interview data
+data/interview/*
 
 # codebase
 codebase.md
