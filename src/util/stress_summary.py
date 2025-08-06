@@ -27,10 +27,10 @@ def load_participants_mapping(csv_path: str) -> Dict[str, str]:
             name = row['성함']
             user_id = row['아이디']
             identifier = row['식별 기호']
-            # Create mapping using both name and id as keys
-            mapping[name] = identifier
+            # For handling duplicate names, use user_id as the primary key for mapping
+            # Only use name as fallback if user_id is not available
             mapping[user_id] = identifier
-            # Also create a combined key for exact matching
+            # Create a combined key for exact matching (name_userid)
             mapping[f"{name}_{user_id}"] = identifier
     return mapping
 
@@ -51,23 +51,20 @@ def get_participant_identifier(participant_data: Dict[str, Any], mapping: Dict[s
     name = participant_data.get('name', '')
     user_id = participant_data.get('id', '')
     
-    # Try to find the identifier using different keys
-    # First try exact name match
-    if name in mapping:
-        return mapping[name]
-    
-    # Then try user ID match
-    if user_id in mapping:
+    # For handling duplicate names, prioritize user_id-based matching
+    # First try user ID match (most reliable for distinguishing duplicate names)
+    if user_id and user_id in mapping:
         return mapping[user_id]
     
-    # Try combined key
-    combined_key = f"{name}_{user_id}"
-    if combined_key in mapping:
-        return mapping[combined_key]
+    # Try combined key (name_userid) for exact matching
+    if name and user_id:
+        combined_key = f"{name}_{user_id}"
+        if combined_key in mapping:
+            return mapping[combined_key]
     
     # If no match found, return user_id as fallback
     print(f"Warning: No mapping found for participant {name} ({user_id})", file=sys.stderr)
-    return user_id
+    return user_id if user_id else name
 
 
 def extract_stress_scores(participant_data: Dict[str, Any], participant_id: str) -> list:
