@@ -47,24 +47,43 @@ def week_to_time_symbol(week: str) -> str:
 
 
 def get_participant_identifier(participant_data: Dict[str, Any], mapping: Dict[str, str]) -> str:
-    """Get the correct participant identifier (식별 기호) using the mapping."""
+    """Get the correct participant identifier (식별 기호) using the mapping.
+    
+    This function handles duplicate names (동명이인) by prioritizing user_id-based matching
+    to distinguish between participants like P10 and P29 who may have the same name.
+    """
     name = participant_data.get('name', '')
     user_id = participant_data.get('id', '')
     
-    # For handling duplicate names, prioritize user_id-based matching
-    # First try user ID match (most reliable for distinguishing duplicate names)
+    # For handling duplicate names (동명이인), prioritize user_id-based matching
+    # This is critical for distinguishing participants like P10 and P29 with identical names
     if user_id and user_id in mapping:
-        return mapping[user_id]
+        identified_participant = mapping[user_id]
+        # Add logging for duplicate name detection
+        if name:
+            # Check if this name appears with multiple user_ids in the mapping
+            same_name_count = sum(1 for key in mapping.keys() 
+                                  if key.startswith(f"{name}_") or key == name)
+            if same_name_count > 1:
+                print(f"Info: Duplicate name detected for '{name}'. Using user_id '{user_id}' -> {identified_participant}", file=sys.stderr)
+        return identified_participant
     
-    # Try combined key (name_userid) for exact matching
+    # Try combined key (name_userid) for exact matching - most reliable method
     if name and user_id:
         combined_key = f"{name}_{user_id}"
         if combined_key in mapping:
             return mapping[combined_key]
     
-    # If no match found, return user_id as fallback
-    print(f"Warning: No mapping found for participant {name} ({user_id})", file=sys.stderr)
-    return user_id if user_id else name
+    # Critical error: participant not found in mapping
+    # This could indicate a data integrity issue with duplicate names
+    error_msg = f"Critical: Participant mapping failed for name='{name}', user_id='{user_id}'"
+    print(f"Error: {error_msg}", file=sys.stderr)
+    print(f"Error: This may indicate duplicate name handling issues (동명이인)", file=sys.stderr)
+    
+    # Return user_id as fallback but log the issue
+    fallback_id = user_id if user_id else name
+    print(f"Error: Using fallback identifier '{fallback_id}' - verify participant mapping", file=sys.stderr)
+    return fallback_id
 
 
 def extract_emotional_labor_scores(participant_data: Dict[str, Any], participant_id: str) -> list:

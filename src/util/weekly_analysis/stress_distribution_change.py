@@ -124,7 +124,7 @@ def main():
         team = participant["team"]  # 참가자 팀
         gender = participant.get("gender", "여성")  # 참가자 성별 (기본값: 여성)
 
-        # 고유 ID 생성
+        # 고유 ID 생성 - 동명이인(P10, P29 등) 처리를 위해 이름과 팀 정보 결합
         unique_id = generate_unique_id(name, team)
 
         # 참가자 정보를 고유 ID로 저장

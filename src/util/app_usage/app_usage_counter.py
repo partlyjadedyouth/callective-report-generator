@@ -122,11 +122,10 @@ def print_csv_format(
             participant_id = format_participant_id(participant_mapping[user_id])
             participant_records[participant_id] = records
         else:
-            # If user not found in mapping, skip or use user_id as fallback
-            print(
-                f"Warning: User {user_id} not found in participant mapping",
-                file=sys.stderr,
-            )
+            # Critical error: user not found in mapping - this could indicate duplicate name handling issues
+            print(f"Error: User '{user_id}' not found in participant mapping", file=sys.stderr)
+            print(f"Error: This may indicate duplicate name handling issues (동명이인)", file=sys.stderr)
+            print(f"Error: Verify that participant mapping includes user_id '{user_id}'", file=sys.stderr)
 
     # Sort participants by numeric part of ID
     def sort_key(participant_id):

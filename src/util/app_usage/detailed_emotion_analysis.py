@@ -16,14 +16,22 @@ from collections import defaultdict
 
 
 def load_participants_mapping(csv_path: str) -> Dict[str, str]:
-    """Load participant mapping from CSV file and create a mapping from user_id to 식별 기호."""
+    """Load participant mapping from CSV file and create a mapping from user_id to 식별 기호.
+    
+    For handling duplicate names (동명이인), prioritize user_id as the primary key.
+    This ensures participants like P10 and P29 with the same name are distinguished correctly.
+    """
     mapping = {}
     with open(csv_path, "r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         for row in reader:
+            name = row["성함"]
             user_id = row["아이디"]
             identifier = row["식별 기호"]
+            # For handling duplicate names (동명이인), use user_id as the primary key
             mapping[user_id] = identifier
+            # Create a combined key for exact matching (name_userid) - most reliable method  
+            mapping[f"{name}_{user_id}"] = identifier
     return mapping
 
 
@@ -167,11 +175,10 @@ def print_csv_format(
             for week, emotion_counts in emotions_by_week.items():
                 participant_emotions[participant_id][week] = emotion_counts
         else:
-            # If user not found in mapping, skip or use user_id as fallback
-            print(
-                f"Warning: User {user_id} not found in participant mapping",
-                file=sys.stderr,
-            )
+            # Critical error: user not found in mapping - this could indicate duplicate name handling issues
+            print(f"Error: User '{user_id}' not found in participant mapping", file=sys.stderr)
+            print(f"Error: This may indicate duplicate name handling issues (동명이인)", file=sys.stderr)
+            print(f"Error: Verify that participant mapping includes user_id '{user_id}'", file=sys.stderr)
 
     # Sort participants by numeric part of ID
     def sort_key(participant_id):

@@ -19,7 +19,11 @@ def load_analysis_data(file_path: str) -> Dict[str, Any]:
 
 
 def load_participants_mapping(csv_path: str) -> Dict[str, str]:
-    """Load participant mapping from CSV file and create a mapping from name+id to 식별 기호."""
+    """Load participant mapping from CSV file and create a mapping from name+id to 식별 기호.
+    
+    For handling duplicate names (동명이인), prioritize user_id as the primary key.
+    This ensures participants like P10 and P29 with the same name are distinguished correctly.
+    """
     mapping = {}
     with open(csv_path, 'r', encoding='utf-8') as file:
         reader = csv.DictReader(file)
@@ -27,10 +31,10 @@ def load_participants_mapping(csv_path: str) -> Dict[str, str]:
             name = row['성함']
             user_id = row['아이디']
             identifier = row['식별 기호']
-            # Create mapping using both name and id as keys
-            mapping[name] = identifier
+            # For handling duplicate names (동명이인), prioritize user_id as the primary key
+            # Only use name as fallback if user_id is not available
             mapping[user_id] = identifier
-            # Also create a combined key for exact matching
+            # Create a combined key for exact matching (name_userid) - most reliable method
             mapping[f"{name}_{user_id}"] = identifier
     return mapping
 
@@ -50,27 +54,43 @@ def week_to_time_symbol(week: str) -> str:
 
 
 def get_participant_identifier(participant_data: Dict[str, Any], mapping: Dict[str, str]) -> str:
-    """Get the correct participant identifier (식별 기호) using the mapping."""
+    """Get the correct participant identifier (식별 기호) using the mapping.
+    
+    This function handles duplicate names (동명이인) by prioritizing user_id-based matching
+    to distinguish between participants like P10 and P29 who may have the same name.
+    """
     name = participant_data.get('name', '')
     user_id = participant_data.get('id', '')
     
-    # Try to find the identifier using different keys
-    # First try exact name match
-    if name in mapping:
-        return mapping[name]
+    # For handling duplicate names (동명이인), prioritize user_id-based matching
+    # This is critical for distinguishing participants like P10 and P29 with identical names
+    if user_id and user_id in mapping:
+        identified_participant = mapping[user_id]
+        # Add logging for duplicate name detection
+        if name:
+            # Check if this name appears with multiple user_ids in the mapping
+            same_name_count = sum(1 for key in mapping.keys() 
+                                  if key.startswith(f"{name}_") or key == name)
+            if same_name_count > 1:
+                print(f"Info: Duplicate name detected for '{name}'. Using user_id '{user_id}' -> {identified_participant}", file=sys.stderr)
+        return identified_participant
     
-    # Then try user ID match
-    if user_id in mapping:
-        return mapping[user_id]
+    # Try combined key (name_userid) for exact matching - most reliable method
+    if name and user_id:
+        combined_key = f"{name}_{user_id}"
+        if combined_key in mapping:
+            return mapping[combined_key]
     
-    # Try combined key
-    combined_key = f"{name}_{user_id}"
-    if combined_key in mapping:
-        return mapping[combined_key]
+    # Critical error: participant not found in mapping
+    # This could indicate a data integrity issue with duplicate names
+    error_msg = f"Critical: Participant mapping failed for name='{name}', user_id='{user_id}'"
+    print(f"Error: {error_msg}", file=sys.stderr)
+    print(f"Error: This may indicate duplicate name handling issues (동명이인)", file=sys.stderr)
     
-    # If no match found, return user_id as fallback
-    print(f"Warning: No mapping found for participant {name} ({user_id})", file=sys.stderr)
-    return user_id
+    # Return user_id as fallback but log the issue
+    fallback_id = user_id if user_id else name
+    print(f"Error: Using fallback identifier '{fallback_id}' - verify participant mapping", file=sys.stderr)
+    return fallback_id
 
 
 def extract_bat_secondary_scores(participant_data: Dict[str, Any], participant_id: str) -> list:
