@@ -6,58 +6,37 @@ import numpy as np
 from datetime import datetime
 
 """
-Fetch time_range_emotion_categories
+Fetch time_range_emotion_categories from consolidated app analysis file
 """
-# Define the base path for analysis files
-data_dir = Path("data/analysis")
+# Define the path to the consolidated analysis file
+file_path = Path("data/figures/final/app_analysis_final.json")
 
-# Define the week numbers to fetch (0, 2, 4, 6, 8, 10, 12)
-week_numbers = [0, 2, 4, 6, 8, 10, 12]
-
-# Initialize dictionary
-time_range_emotion_categories = {}
-
-# Process each file
-for week_num in week_numbers:
-    file_path = data_dir / f"app_analysis_{week_num}주차.json"
-
-    # Check if file exists
-    if not file_path.exists():
-        print(f"Warning: File {file_path} does not exist, skipping...")
-        continue
-
+# Check if file exists
+if not file_path.exists():
+    print(f"Error: File {file_path} does not exist.")
+    time_range_emotion_categories = {}
+else:
     try:
         # Load the JSON file
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # Extract daily_user_counts from this file
+        # Extract time_range_emotion_categories from this file
         if "time_range_emotion_categories" in data:
-            file_time_range = data["time_range_emotion_categories"]
-
-            for time_range in file_time_range.keys():
-                if time_range in time_range_emotion_categories:
-                    time_range_emotion_categories[time_range][
-                        "positive"
-                    ] += file_time_range[time_range]["positive"]
-                    time_range_emotion_categories[time_range][
-                        "negative"
-                    ] += file_time_range[time_range]["negative"]
-                else:
-                    time_range_emotion_categories[time_range] = file_time_range[
-                        time_range
-                    ]
-
-            print(f"Loaded from {file_path.name}")
+            time_range_emotion_categories = data["time_range_emotion_categories"]
+            print(f"Loaded time range emotion categories from {file_path.name}")
         else:
             print(
                 f"Warning: 'time_range_emotion_categories' not found in {file_path.name}"
             )
+            time_range_emotion_categories = {}
 
     except json.JSONDecodeError as e:
         print(f"Error reading JSON from {file_path}: {e}")
+        time_range_emotion_categories = {}
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
+        time_range_emotion_categories = {}
 
 print(time_range_emotion_categories)
 

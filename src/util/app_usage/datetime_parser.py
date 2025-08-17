@@ -32,10 +32,10 @@ def parse_datetime_format(datetime_str):
 
 
 # Configuration
-filename = "week6.csv"  # Change this variable to process different files
+filename = "final_data.csv"  # Change this variable to process different files
 
 
-def transform_csv_datetime(input_filename, output_dir="data/csv"):
+def transform_csv_datetime(input_filename, output_dir="data/figures/final"):
     """
     Transform datetime column in CSV file and save to output directory
 
@@ -46,7 +46,7 @@ def transform_csv_datetime(input_filename, output_dir="data/csv"):
 
     # Construct full input path - look in data/csv directory first
     input_paths = [
-        os.path.join("data/csv", input_filename),
+        os.path.join("data/figures/final", input_filename),
         input_filename,  # Direct path if provided
         os.path.join(os.getcwd(), input_filename),  # Current directory
     ]

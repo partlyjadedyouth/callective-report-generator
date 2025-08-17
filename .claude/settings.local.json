@@ -5,7 +5,10 @@
       "Bash(python:*)",
       "Bash(grep:*)",
       "Bash(cut:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(for file in data/analysis/app_analysis_*주차.json)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)"
     ],
     "deny": []
   }
