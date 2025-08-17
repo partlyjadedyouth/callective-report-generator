@@ -109,6 +109,10 @@ def main():
     plt.xlabel("Date", fontsize=12)
     plt.ylabel("User Count", fontsize=12)
 
+    # Add text box to show sum and average.
+    stats_text = f"Total: {sum(user_counts)} records\nAverage: {round(sum(user_counts) / len(user_counts), 2)} records per day"
+    plt.text(0.05, 2.5, stats_text)
+
     # Add grid for better readability
     plt.grid(True, alpha=0.3)
 
