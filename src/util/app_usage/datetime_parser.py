@@ -32,9 +32,7 @@ def parse_datetime_format(datetime_str):
 
 
 # Configuration
-filename = (
-    "mindbattery_data_0723_0801.csv"  # Change this variable to process different files
-)
+filename = "week6.csv"  # Change this variable to process different files
 
 
 def transform_csv_datetime(input_filename, output_dir="data/csv"):

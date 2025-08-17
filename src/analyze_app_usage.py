@@ -483,7 +483,7 @@ def analyze_app_usage(week=0, csv_dir="data/csv", output_dir="data/analysis"):
 
 if __name__ == "__main__":
     # Example usage of the analyze_app_usage function
-    week_number = 12  # Specify the week number to analyze
+    week_number = 6  # Specify the week number to analyze
     csv_directory = "data/csv"  # Directory containing the CSV files
     output_directory = "data/analysis"  # Directory to save the analysis results
 
