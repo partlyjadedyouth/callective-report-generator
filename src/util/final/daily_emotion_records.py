@@ -93,7 +93,7 @@ def main():
         range(len(x_labels)), emotion_counts, marker="o", linewidth=2, markersize=6
     )
 
-    # Set x-axis labels and rotate them for better readability
+    # Set x-axis labels
     plt.xticks(range(len(x_labels)), x_labels)
 
     # Add y-axis value annotations on every point
@@ -110,6 +110,10 @@ def main():
     plt.title("Daily Emotion Records", fontsize=16, fontweight="bold")
     plt.xlabel("Date", fontsize=12)
     plt.ylabel("Emotion Record Count", fontsize=12)
+
+    # Add text box to show sum and average.
+    stats_text = f"Total: {sum(emotion_counts)} records\nAverage: {round(sum(emotion_counts) / len(emotion_counts), 2)} records per day"
+    plt.text(0.05, 0.95, stats_text)
 
     # Add grid for better readability
     plt.grid(True, alpha=0.3)
